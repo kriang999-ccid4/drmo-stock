@@ -59,7 +59,7 @@
         </div>
         <span class="pill warn" id="cut-pill"><span class="dot"></span><span id="cut-pill-t">กำลังโหลด</span></span>
       </div>
-      <div class="meta"><span id="cut-for"></span><span>ตัดล่าสุด <b id="cut-last">–</b></span></div>
+      <div class="meta"><span id="cut-for"></span><span>ตัดล่าสุด <b id="cut-last">–</b></span><button class="link" type="button" data-go="history">ดูประวัติ</button></div>
       <button class="cta" id="btn-cut" type="button">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         เริ่มตัดยอดประจำวัน
@@ -104,7 +104,8 @@
   <header class="bar">
     <div class="wrap in">
       <button class="icon-btn" type="button" data-go="home" aria-label="กลับหน้าแรก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-      <div><div class="eyebrow">ตัดยอดจากใบ OPD</div><h1>ตัดยอดประจำวัน</h1></div>
+      <div class="grow"><div class="eyebrow">ตัดยอดจากใบ OPD</div><h1>ตัดยอดประจำวัน</h1></div>
+      <button class="icon-btn" type="button" data-go="history" aria-label="ประวัติการตัดยอด"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg></button>
     </div>
   </header>
 
@@ -131,6 +132,7 @@
     <div class="acts">
       <button class="cta" type="button" data-go="home">กลับหน้าแรก</button>
       <button class="ghost" type="button" id="btn-undo">ยกเลิกการตัดยอดชุดนี้</button>
+      <button class="link" type="button" data-go="history">ดูประวัติการตัดยอดทั้งหมด</button>
     </div>
   </div>
 
@@ -154,6 +156,20 @@
   </div>
 </div>
 
+<div class="app" id="view-history" hidden>
+  <header class="bar">
+    <div class="wrap in">
+      <button class="icon-btn" type="button" id="hist-back" aria-label="ย้อนกลับ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="grow"><div class="eyebrow">บันทึกผ่านแอป · ล่าสุด 30 ชุด</div><h1>ประวัติการตัดยอด</h1></div>
+      <button class="icon-btn" type="button" id="hist-reload" aria-label="โหลดใหม่"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+    </div>
+  </header>
+  <div class="wrap">
+    <p class="hist-note">ยกเลิกชุดไหน ยอดคงเหลือของทุกรายการในชุดนั้นจะถูกคืนกลับ และแถวในชีต Transactions จะถูกลบ</p>
+    <div id="hist-list"><div class="skel"></div></div>
+  </div>
+</div>
+
 <nav class="nav" id="nav" aria-label="เมนูหลัก"><div class="in">
   <button type="button" class="on" data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>หน้าแรก</button>
   <button type="button" data-go="cut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><rect x="3" y="4" width="18" height="16" rx="3"/></svg>ตัดยอด</button>
@@ -167,5 +183,6 @@
 <script src="js/demo-data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/cut.js"></script>
+<script src="js/history.js"></script>
 </body>
 </html>

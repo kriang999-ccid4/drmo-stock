@@ -187,21 +187,36 @@
   }
   function closeReview() { $('review').hidden = true; }
 
+  // ---------- โหมดตัวอย่าง: จำลองการบันทึก/ยกเลิกในหน่วยความจำ ----------
   function applyDemo(body) {
+    var D = window.DEMO_DATA;
+    if (!D.history) D.history = [];
+    if (D._origLastCut === undefined) D._origLastCut = D.lastCut;
     var results = body.lines.map(function (ln) {
       var it = byId[ln.itemId], before = it.qty, after = before === null || before === undefined ? null : Math.round((before - ln.qty) * 1000) / 1000;
       if (after !== null) it.qty = after;
       return { itemId: it.id, name: it.name, unit: it.unit, qty: ln.qty, before: before, after: after };
     });
-    var D = window.DEMO_DATA;
-    D._prevLastCut = D.lastCut;
-    D.lastCut = { date: body.date, by: body.by };
-    recountDemo();
-    return { batchId: 'DEMO-' + Date.now(), date: body.date, by: body.by, results: results };
+    var batchId = 'DEMO-' + Date.now();
+    D.history.unshift({ batchId: batchId, date: body.date, by: body.by, createdAt: new Date().toISOString(),
+      lines: results.map(function (r) { return { itemId: r.itemId, name: r.name, unit: r.unit, qty: r.qty }; }) });
+    demoLastCut(); recountDemo();
+    return { batchId: batchId, date: body.date, by: body.by, results: results };
   }
-  function undoDemo(batch) {
-    batch.results.forEach(function (r) { var it = byId[r.itemId]; if (it && r.before !== null && r.before !== undefined) it.qty = r.before; });
-    var D = window.DEMO_DATA; D.lastCut = D._prevLastCut || null; recountDemo();
+  function undoDemo(batchId) {
+    var D = window.DEMO_DATA, h = D.history || [], i = h.findIndex(function (b) { return b.batchId === batchId; });
+    if (i < 0) throw new Error('ไม่พบการตัดยอดชุดนี้ อาจถูกยกเลิกไปแล้ว');
+    h[i].lines.forEach(function (ln) {
+      var it = D.items.find(function (x) { return x.id === ln.itemId; });
+      if (it && it.qty !== null && it.qty !== undefined) it.qty = Math.round((it.qty + ln.qty) * 1000) / 1000;
+    });
+    h.splice(i, 1);
+    demoLastCut(); recountDemo();
+  }
+  function demoLastCut() {
+    var D = window.DEMO_DATA, last = D._origLastCut || null;
+    (D.history || []).forEach(function (b) { if (!last || b.date >= last.date) last = { date: b.date, by: b.by }; });
+    D.lastCut = last;
   }
   function recountDemo() {
     var D = window.DEMO_DATA, out = {};
@@ -245,7 +260,7 @@
     if (!undoArmed) { undoArmed = true; u.textContent = 'กดอีกครั้งเพื่อยืนยันการยกเลิก'; setTimeout(function () { if (undoArmed) { undoArmed = false; u.textContent = 'ยกเลิกการตัดยอดชุดนี้'; } }, 4000); return; }
     undoArmed = false; u.disabled = true; u.textContent = 'กำลังยกเลิก…';
     var b = lastBatch;
-    var p = b.demo ? Promise.resolve(undoDemo(b)) : post({ action: 'undoCut', batchId: b.batchId });
+    var p = b.demo ? Promise.resolve().then(function () { undoDemo(b.batchId); }) : post({ action: 'undoCut', batchId: b.batchId });
     p.then(function () {
       // คืนรายการเดิมเข้าตะกร้า ให้แก้แล้วบันทึกใหม่ได้
       cart = {}; b.results.forEach(function (r) { cart[r.itemId] = r.qty; });
@@ -254,6 +269,11 @@
       DM.reloadHome();
     }).catch(function (err) { u.disabled = false; u.textContent = 'ยกเลิกการตัดยอดชุดนี้'; DM.say('ยกเลิกไม่สำเร็จ: ' + err.message); });
   };
+
+  // ใช้ร่วมกับหน้าประวัติ
+  DM.post = post;
+  DM.demoUndo = undoDemo;
+  document.addEventListener('dm:stock-changed', function () { loaded = false; });
 
   $('btn-review').onclick = openReview;
   $('rv-back').onclick = closeReview;

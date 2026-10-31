@@ -146,7 +146,7 @@
   loadData().then(render).catch(function (err) {
     $('loading').hidden = true;
     var e = $('error'); e.hidden = false;
-    e.textContent = 'โหลดข้อมูลไม่สำเร็จ: ' + err.message + ' ตรวจสอบอินเทอร์เน็ต หรือ API_URL ใน js/config.js แล้วลองเปิดใหม่';
+    e.textContent = 'โหลดข้อมูลไม่สำเร็จ: ' + err.message + ' · ลองเปิดแอปใหม่อีกครั้ง';
     $('cut-pill-t').textContent = 'ไม่ทราบสถานะ';
   });
 
@@ -157,7 +157,7 @@
   $('btn-cut').onclick = function () { go('cut'); };
 
   // ---------- views (#cut = หน้าตัดยอด) ----------
-  var VIEWS = ['home', 'cut'];
+  var VIEWS = ['home', 'cut', 'history'];
   function go(v) {
     var h = v === 'home' ? '' : '#' + v;
     if (location.hash === h || (!location.hash && !h)) show(); else location.hash = h;
