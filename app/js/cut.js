@@ -39,12 +39,7 @@
     return loading;
   }
 
-  function post(body) {
-    // text/plain = simple request, ไม่ต้องผ่าน CORS preflight ของ Apps Script
-    return fetch(CFG.API_URL, { method: 'POST', body: JSON.stringify(body), redirect: 'follow' })
-      .then(function (r) { if (!r.ok) throw new Error('เซิร์ฟเวอร์ตอบกลับ ' + r.status); return r.json(); })
-      .then(function (j) { if (!j.ok) throw new Error(j.error || 'บันทึกไม่สำเร็จ'); return j.data; });
-  }
+  function post(body) { return DM.apiPost(body); }
 
   // ---------- draft (กันข้อมูลหายถ้าปิดแอปกลางคัน) ----------
   function saveDraft() { DM.store.set(KEY_DRAFT, JSON.stringify({ date: $('cut-date').value, cart: cart })); }

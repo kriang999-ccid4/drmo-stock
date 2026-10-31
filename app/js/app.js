@@ -30,18 +30,29 @@
   var h = now.getHours();
   $('hello').firstChild.nodeValue = (h < 12 ? 'อรุณสวัสดิ์ค่ะ คุณ' : h < 17 ? 'สวัสดีตอนบ่ายค่ะ คุณ' : 'สวัสดีตอนเย็นค่ะ คุณ');
 
-  // ---------- user name (LINE profile will replace this later) ----------
+  // ---------- user name (เปิดผ่าน LINE จะใช้ชื่อจาก LINE แทน) ----------
   var KEY_USER = 'drmo-stock-user';
   var uname = store.get(KEY_USER) || CFG.DEFAULT_USER || 'Nee';
-  function setName(n) {
+  var fromLine = false;
+  function setName(n, picture) {
     n = (n || '').trim() || CFG.DEFAULT_USER || 'Nee';
-    $('who-name').textContent = n; $('h-name').textContent = ' ' + n; $('ini').textContent = Array.from(n)[0].toUpperCase();
+    $('who-name').textContent = n; $('h-name').textContent = ' ' + n;
+    var ini = $('ini');
+    if (picture) { ini.innerHTML = '<img src="' + esc(picture) + '" alt="">'; ini.classList.add('pic'); }
+    else { ini.textContent = Array.from(n)[0].toUpperCase(); ini.classList.remove('pic'); }
     return n;
   }
   uname = setName(uname);
+  function setLineUser(name, picture) {
+    fromLine = true; uname = setName(name, picture);
+    $('who').querySelector('svg').style.display = 'none';
+    $('who').setAttribute('aria-label', 'ผู้ใช้จาก LINE: ' + uname);
+    document.dispatchEvent(new CustomEvent('dm:user', { detail: uname }));
+  }
   var who = $('who'), form = $('editname'), inp = $('name-input');
   var skinBtn = $('skin-btn'), skinPanel = $('skin-panel');
   who.onclick = function () {
+    if (fromLine) { say('ชื่อนี้มาจาก LINE · แก้ชื่อที่แสดงได้ในชีต Users'); return; }
     skinPanel.hidden = true; skinBtn.setAttribute('aria-expanded', 'false');
     form.hidden = !form.hidden; who.setAttribute('aria-expanded', String(!form.hidden));
     if (!form.hidden) { inp.value = uname; inp.focus(); inp.select(); }
@@ -76,6 +87,15 @@
     return fetch(CFG.API_URL + '?action=summary', { redirect: 'follow' })
       .then(function (r) { if (!r.ok) throw new Error('เซิร์ฟเวอร์ตอบกลับ ' + r.status); return r.json(); })
       .then(function (j) { if (!j.ok) throw new Error(j.error || 'โหลดข้อมูลไม่สำเร็จ'); return j.data; });
+  }
+
+  // ส่งคำสั่งบันทึกไปหลังบ้าน (แนบ LINE idToken ถ้าเปิดผ่าน LINE) · text/plain = ไม่ติด CORS preflight
+  function apiPost(body) {
+    var tok = window.DM && DM.idToken && DM.idToken();
+    if (tok) body.idToken = tok;
+    return fetch(CFG.API_URL, { method: 'POST', body: JSON.stringify(body), redirect: 'follow' })
+      .then(function (r) { if (!r.ok) throw new Error('เซิร์ฟเวอร์ตอบกลับ ' + r.status); return r.json(); })
+      .then(function (j) { if (!j.ok) throw new Error(j.error || 'บันทึกไม่สำเร็จ'); return j.data; });
   }
 
   var ICONS = {
@@ -141,6 +161,8 @@
       : 'ข้อมูลจาก Google Sheet ณ ' + fmtShort(d.asOf);
     renderList();
     $('loading').hidden = true; $('content').hidden = false;
+    window.DM.summary = d;
+    document.dispatchEvent(new CustomEvent('dm:summary', { detail: d }));
   }
 
   loadData().then(render).catch(function (err) {
@@ -157,7 +179,7 @@
   $('btn-cut').onclick = function () { go('cut'); };
 
   // ---------- views (#cut = หน้าตัดยอด) ----------
-  var VIEWS = ['home', 'cut', 'history'];
+  var VIEWS = ['home', 'cut', 'history', 'notify'];
   function go(v) {
     var h = v === 'home' ? '' : '#' + v;
     if (location.hash === h || (!location.hash && !h)) show(); else location.hash = h;
@@ -176,6 +198,7 @@
   window.DM = {
     CFG: CFG, say: say, esc: esc, fmtNum: fmtNum, fmtShort: fmtShort, store: store, go: go,
     getUser: function () { return uname; },
+    setLineUser: setLineUser, apiPost: apiPost, idToken: function () { return null; }, summary: null,
     reloadHome: function () { return loadData().then(render); }
   };
   setTimeout(show, 0);
