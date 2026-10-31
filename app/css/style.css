@@ -11,6 +11,7 @@
   --crit:#B3261E; --crit-bg:#FBE3E0;
   --warn:#9A5800; --warn-bg:#FCEBD2;
   --info:#5E4A86; --info-bg:#ECE6F5;
+  --ok:#2F6B4F;
   --tint:rgba(80,58,58,.28);
   --shadow:0 1px 2px rgba(80,58,58,.06),0 8px 24px rgba(80,58,58,.10);
   --f-body:"Anuphan","Sarabun","Leelawadee UI","Thonburi",system-ui,sans-serif;
@@ -27,7 +28,7 @@
   --bg:#1C1415; --surface:#271D1E; --surface-2:#332627; --fg:#F5E6DE; --fg-2:#C3A9A4; --line:#3D2E2F;
   --hdr-a:#5A4142; --hdr-b:#3E2C2D; --hdr-c:#241819; --hdr-fg:#FFF2E4;
   --gold:#D4B072; --gold-2:#F1E0B5; --gold-3:#A07C3C; --gold-glow:rgba(222,188,120,.35);
-  --crit:#FF8A80; --crit-bg:#4A2422; --warn:#F2B661; --warn-bg:#47331A; --info:#C9B6EC; --info-bg:#342C44;
+  --crit:#FF8A80; --crit-bg:#4A2422; --warn:#F2B661; --warn-bg:#47331A; --info:#C9B6EC; --info-bg:#342C44; --ok:#8FD1AE;
   --tint:rgba(0,0,0,.4); --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}}
 @media (prefers-color-scheme: dark){:root[data-skin="rose"]:not([data-theme="light"]){
   --brand:#E9A9B4; --brand-2:#C98290; --hdr-a:#6B3F46; --hdr-b:#4E2E34; --hdr-c:#2C1A1E; --bg:#1E1416; --surface:#2A1D20; --surface-2:#37262A}}
@@ -36,7 +37,7 @@
   --bg:#1C1415; --surface:#271D1E; --surface-2:#332627; --fg:#F5E6DE; --fg-2:#C3A9A4; --line:#3D2E2F;
   --hdr-a:#5A4142; --hdr-b:#3E2C2D; --hdr-c:#241819; --hdr-fg:#FFF2E4;
   --gold:#D4B072; --gold-2:#F1E0B5; --gold-3:#A07C3C; --gold-glow:rgba(222,188,120,.35);
-  --crit:#FF8A80; --crit-bg:#4A2422; --warn:#F2B661; --warn-bg:#47331A; --info:#C9B6EC; --info-bg:#342C44;
+  --crit:#FF8A80; --crit-bg:#4A2422; --warn:#F2B661; --warn-bg:#47331A; --info:#C9B6EC; --info-bg:#342C44; --ok:#8FD1AE;
   --tint:rgba(0,0,0,.4); --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}
 :root[data-theme="dark"][data-skin="rose"]{
   --brand:#E9A9B4; --brand-2:#C98290; --hdr-a:#6B3F46; --hdr-b:#4E2E34; --hdr-c:#2C1A1E; --bg:#1E1416; --surface:#2A1D20; --surface-2:#37262A}

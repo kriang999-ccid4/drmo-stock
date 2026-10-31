@@ -16,7 +16,7 @@
 
   function dayLabel(iso) {
     var p = iso.split('-').map(Number), d = new Date(p[0], p[1] - 1, p[2]);
-    return 'ใบ OPD วัน' + TH_DAY[d.getDay()] + 'ที่ ' + DM.fmtShort(iso);
+    return 'วัน' + TH_DAY[d.getDay()] + 'ที่ ' + DM.fmtShort(iso);
   }
   function savedAt(s) {
     var d = new Date(s);
@@ -26,16 +26,17 @@
 
   function render(list) {
     if (!list.length) {
-      $('hist-list').innerHTML = '<div class="state">ยังไม่มีการตัดยอดที่บันทึกผ่านแอป<br><span class="eyebrow">ข้อมูลเก่าที่นำเข้าจากชีตเดิมจะไม่แสดงในหน้านี้</span></div>';
+      $('hist-list').innerHTML = '<div class="state">ยังไม่มีรายการที่บันทึกผ่านแอป<br><span class="eyebrow">ข้อมูลเก่าที่นำเข้าจากชีตเดิมจะไม่แสดงในหน้านี้</span></div>';
       return;
     }
     var html = '', lastDay = '';
     list.forEach(function (b) {
-      if (b.date !== lastDay) { html += '<div class="hday">' + esc(dayLabel(b.date)) + '</div>'; lastDay = b.date; }
+      var isIn = b.type === 'IN';
+      if (b.date !== lastDay) { html += '<div class="hday">' + esc(dayLabel(b.date, isIn)) + '</div>'; lastDay = b.date; }
       html += '<article class="hcard" data-batch="' + esc(b.batchId) + '">' +
-        '<div class="hh"><div><b>' + b.lines.length + ' รายการ · โดย ' + esc(b.by) + '</b><span>' + esc(savedAt(b.createdAt)) + '</span></div></div>' +
+        '<div class="hh"><div><b><span class="tag ' + (isIn ? 'in">รับเข้า' : 'out">ตัดยอด') + '</span>' + b.lines.length + ' รายการ · โดย ' + esc(b.by) + '</b><span>' + esc(savedAt(b.createdAt)) + '</span></div></div>' +
         b.lines.map(function (ln) {
-          return '<div class="ln"><span class="n">' + esc(ln.name) + '</span><span class="q">−' + fmtNum(ln.qty) + ' ' + esc(ln.unit || '') + '</span></div>';
+          return '<div class="ln"><span class="n">' + esc(ln.name) + '</span><span class="q' + (isIn ? ' in">+' : '">−') + fmtNum(ln.qty) + ' ' + esc(ln.unit || '') + '</span></div>';
         }).join('') +
         '<div class="hf"><button class="ghost hundo" type="button">ยกเลิกชุดนี้</button></div></article>';
     });

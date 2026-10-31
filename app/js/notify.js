@@ -80,7 +80,7 @@
     var b = $('nt-test'); if (busy) return; busy = true;
     b.disabled = true; b.textContent = 'กำลังส่ง…';
     DM.apiPost({ action: 'testNotify' }).then(function () {
-      DM.say('ส่งแล้ว ลองเปิดแชท Wellis By Dr.Mo ใน LINE');
+      DM.say('ส่งแล้ว ลองเปิดแชท DR.MO Stock ใน LINE');
     }).catch(function (err) {
       DM.say('ส่งไม่สำเร็จ: ' + err.message);
     }).then(function () { busy = false; b.disabled = false; b.textContent = 'ส่งข้อความทดสอบตอนนี้'; });

@@ -125,3 +125,31 @@
 #nt-actions .cta{margin-top:12px}
 .nt-hint{margin:8px 0 0;font-size:12.5px;color:var(--fg-2);text-align:center}
 .nt-preview{margin:0;white-space:pre-wrap;word-break:break-word;font:inherit;font-size:13.5px;line-height:1.6;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;color:var(--fg)}
+
+/* รับของเข้า */
+.fld{display:grid;gap:4px;min-width:0;margin-top:12px}
+.fld label{font-size:12.5px;font-weight:600;color:var(--fg-2)}
+.fld .opt{font-weight:400;opacity:.8}
+.fld input,.fld select{width:100%;font:inherit;font-size:15px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);min-width:0}
+.fld input:focus,.fld select:focus{outline:none;border-color:transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--gold-grad) border-box}
+.fld2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.newfields{padding-bottom:4px}
+.rc-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid var(--line)}
+.rc-row:first-child{border-top:0}
+.rc-row .name{font-weight:600;font-size:14.5px;min-width:0;overflow-wrap:anywhere}
+.rc-row .sub{font-size:12.5px;color:var(--fg-2)}
+.rc-add{border:1px solid transparent;border-radius:10px;padding:7px 12px;font-weight:700;font-size:13px;color:var(--on-brand);background:linear-gradient(135deg,var(--brand),var(--brand-2)) padding-box,var(--gold-grad) border-box;white-space:nowrap}
+.rc-line{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 12px;border-top:1px solid var(--line);align-items:center}
+.rc-line:first-child{border-top:0}
+.rc-line .name{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.rc-line .q{font-weight:700;color:var(--ok);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.rc-line .meta{grid-column:1 / -1;font-size:12.5px;color:var(--fg-2)}
+.rc-line .meta .nox{color:var(--warn);font-weight:600}
+.rc-line .ops{grid-column:1 / -1;display:flex;gap:14px}
+.rc-line .ops button{border:0;background:none;padding:2px 0;font-size:12.5px;font-weight:600;color:var(--brand)}
+.rc-line .ops button.del{color:var(--crit)}
+.newtag{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--info-bg);color:var(--info);margin-left:6px;vertical-align:middle}
+.hcard .tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;margin-right:6px}
+.hcard .tag.in{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.hcard .tag.out{background:var(--surface);color:var(--fg-2);border:1px solid var(--line)}
+.hcard .ln .q.in{color:var(--ok)}

@@ -179,7 +179,7 @@
   $('btn-cut').onclick = function () { go('cut'); };
 
   // ---------- views (#cut = หน้าตัดยอด) ----------
-  var VIEWS = ['home', 'cut', 'history', 'notify'];
+  var VIEWS = ['home', 'cut', 'history', 'notify', 'receive'];
   function go(v) {
     var h = v === 'home' ? '' : '#' + v;
     if (location.hash === h || (!location.hash && !h)) show(); else location.hash = h;

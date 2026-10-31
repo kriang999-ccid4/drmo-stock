@@ -193,7 +193,7 @@
       return { itemId: it.id, name: it.name, unit: it.unit, qty: ln.qty, before: before, after: after };
     });
     var batchId = 'DEMO-' + Date.now();
-    D.history.unshift({ batchId: batchId, date: body.date, by: body.by, createdAt: new Date().toISOString(),
+    D.history.unshift({ batchId: batchId, type: 'OUT', date: body.date, by: body.by, createdAt: new Date().toISOString(),
       lines: results.map(function (r) { return { itemId: r.itemId, name: r.name, unit: r.unit, qty: r.qty }; }) });
     demoLastCut(); recountDemo();
     return { batchId: batchId, date: body.date, by: body.by, results: results };
@@ -201,16 +201,17 @@
   function undoDemo(batchId) {
     var D = window.DEMO_DATA, h = D.history || [], i = h.findIndex(function (b) { return b.batchId === batchId; });
     if (i < 0) throw new Error('ไม่พบการตัดยอดชุดนี้ อาจถูกยกเลิกไปแล้ว');
+    var sign = h[i].type === 'IN' ? -1 : 1;
     h[i].lines.forEach(function (ln) {
       var it = D.items.find(function (x) { return x.id === ln.itemId; });
-      if (it && it.qty !== null && it.qty !== undefined) it.qty = Math.round((it.qty + ln.qty) * 1000) / 1000;
+      if (it && it.qty !== null && it.qty !== undefined) it.qty = Math.round((it.qty + sign * ln.qty) * 1000) / 1000;
     });
     h.splice(i, 1);
     demoLastCut(); recountDemo();
   }
   function demoLastCut() {
     var D = window.DEMO_DATA, last = D._origLastCut || null;
-    (D.history || []).forEach(function (b) { if (!last || b.date >= last.date) last = { date: b.date, by: b.by }; });
+    (D.history || []).forEach(function (b) { if (b.type !== 'IN' && (!last || b.date >= last.date)) last = { date: b.date, by: b.by }; });
     D.lastCut = last;
   }
   function recountDemo() {
@@ -265,8 +266,9 @@
     }).catch(function (err) { u.disabled = false; u.textContent = 'ยกเลิกการตัดยอดชุดนี้'; DM.say('ยกเลิกไม่สำเร็จ: ' + err.message); });
   };
 
-  // ใช้ร่วมกับหน้าประวัติ
+  // ใช้ร่วมกับหน้าประวัติ/รับของเข้า
   DM.post = post;
+  DM.loadItems = function (force) { return ensureItems(force).then(function () { return items; }); };
   DM.demoUndo = undoDemo;
   document.addEventListener('dm:stock-changed', function () { loaded = false; });
 
