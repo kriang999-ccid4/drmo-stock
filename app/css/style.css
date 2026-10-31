@@ -168,5 +168,6 @@ section{margin-top:26px}
 .nav .fab{width:54px;height:54px;border-radius:18px;margin-top:-24px;color:var(--on-brand);display:grid;place-items:center;border:1.5px solid transparent;
   background:linear-gradient(135deg,var(--brand),var(--brand-2)) padding-box,var(--gold-grad) border-box;box-shadow:0 0 0 4px rgba(212,175,106,.12),0 0 22px -4px var(--gold-glow),0 8px 18px var(--tint)}
 .nav .fab svg{width:26px;height:26px}
+.nav .fab{position:relative;z-index:2}
 .toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:13.5px;z-index:9;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
 @media (prefers-reduced-motion:no-preference){.tile,.cat{transition:transform .15s ease}.tile:active,.cat:active{transform:scale(.98)}}
