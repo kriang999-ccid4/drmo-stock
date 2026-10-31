@@ -52,7 +52,8 @@
   var who = $('who'), form = $('editname'), inp = $('name-input');
   var skinBtn = $('skin-btn'), skinPanel = $('skin-panel');
   who.onclick = function () {
-    if (fromLine) { say('ชื่อนี้มาจาก LINE · แก้ชื่อที่แสดงได้ในชีต Users'); return; }
+    if (CFG.API_URL) { go('account'); return; }   // ใช้งานจริง: หน้าบัญชี/โหมดผู้ดูแล
+    if (fromLine) { say('ชื่อนี้มาจาก LINE'); return; }
     skinPanel.hidden = true; skinBtn.setAttribute('aria-expanded', 'false');
     form.hidden = !form.hidden; who.setAttribute('aria-expanded', String(!form.hidden));
     if (!form.hidden) { inp.value = uname; inp.focus(); inp.select(); }
@@ -84,9 +85,7 @@
       if (!window.DEMO_DATA) return Promise.reject(new Error('ยังไม่ได้ใส่ API_URL ใน js/config.js'));
       return Promise.resolve(window.DEMO_DATA);
     }
-    return fetch(CFG.API_URL + '?action=summary', { redirect: 'follow' })
-      .then(function (r) { if (!r.ok) throw new Error('เซิร์ฟเวอร์ตอบกลับ ' + r.status); return r.json(); })
-      .then(function (j) { if (!j.ok) throw new Error(j.error || 'โหลดข้อมูลไม่สำเร็จ'); return j.data; });
+    return apiPost({ action: 'summary' });
   }
 
   // ส่งคำสั่งบันทึกไปหลังบ้าน (แนบ LINE idToken ถ้าเปิดผ่าน LINE) · text/plain = ไม่ติด CORS preflight
@@ -95,8 +94,37 @@
     if (tok) body.idToken = tok;
     return fetch(CFG.API_URL, { method: 'POST', body: JSON.stringify(body), redirect: 'follow' })
       .then(function (r) { if (!r.ok) throw new Error('เซิร์ฟเวอร์ตอบกลับ ' + r.status); return r.json(); })
-      .then(function (j) { if (!j.ok) throw new Error(j.error || 'บันทึกไม่สำเร็จ'); return j.data; });
+      .then(function (j) {
+        if (!j.ok) {
+          if (j.code === 'login' || j.code === 'pending' || j.code === 'disabled') showGate(j.code, j.error);
+          var err = new Error(j.error || 'บันทึกไม่สำเร็จ'); err.code = j.code; throw err;
+        }
+        return j.data;
+      });
   }
+
+  // ---------- ประตูตรวจสิทธิ์ (ต้องเปิดผ่าน LINE และได้รับอนุมัติ) ----------
+  var GATE = {
+    checking: ['กำลังตรวจสอบสิทธิ์', 'รอสักครู่…'],
+    login: ['เข้าสู่ระบบด้วย LINE', 'ระบบสต๊อกนี้ใช้ได้เฉพาะทีมคลินิก เปิดผ่านแอป LINE หรือกดเข้าสู่ระบบ'],
+    pending: ['รอผู้ดูแลอนุมัติ', 'ส่งคำขอใช้งานแล้ว เมื่อผู้ดูแลอนุมัติ จะมีข้อความแจ้งใน LINE'],
+    disabled: ['บัญชีถูกปิดการใช้งาน', 'ติดต่อผู้ดูแลระบบของคลินิก'],
+    error: ['เชื่อมต่อไม่สำเร็จ', '']
+  };
+  function showGate(code, msg) {
+    var g = GATE[code] || GATE.error, s = (window.DM && DM.line) || {};
+    $('gate-title').textContent = g[0];
+    $('gate-msg').textContent = msg && code !== 'pending' ? msg : g[1];
+    $('gate-who').textContent = s.profile ? 'บัญชี LINE: ' + s.profile.displayName : '';
+    var acts = '';
+    if (code === 'login') acts = '<button class="cta" type="button" id="gate-login">เข้าสู่ระบบด้วย LINE</button>' + (CFG.LIFF_URL ? '<a class="ghost" href="' + esc(CFG.LIFF_URL) + '">เปิดในแอป LINE</a>' : '');
+    else if (code !== 'checking') acts = '<button class="cta" type="button" id="gate-retry">ตรวจสอบอีกครั้ง</button>';
+    $('gate-acts').innerHTML = acts;
+    if ($('gate-login')) $('gate-login').onclick = function () { DM.lineLogin(); };
+    if ($('gate-retry')) $('gate-retry').onclick = function () { location.reload(); };
+    $('gate').hidden = false;
+  }
+  function hideGate() { $('gate').hidden = true; }
 
   var ICONS = {
     'Filler Botox ไหม': '<path d="M18 2l4 4M17 7l-7 7M14 4l6 6M9 15l-5 5M7 11l6 6"/>',
@@ -165,11 +193,21 @@
     document.dispatchEvent(new CustomEvent('dm:summary', { detail: d }));
   }
 
-  loadData().then(render).catch(function (err) {
+  function boot() { loadData().then(render).catch(function (err) {
     $('loading').hidden = true;
     var e = $('error'); e.hidden = false;
     e.textContent = 'โหลดข้อมูลไม่สำเร็จ: ' + err.message + ' · ลองเปิดแอปใหม่อีกครั้ง';
     $('cut-pill-t').textContent = 'ไม่ทราบสถานะ';
+  }); }
+  if (CFG.API_URL) showGate('checking');
+  document.addEventListener('dm:auth', function (e) {
+    var a = e.detail || {};
+    if (!a.ok) { showGate(a.code || 'error', a.message); return; }
+    hideGate(); boot(); show();
+    var u = DM.line && DM.line.user;
+    $('admin-alert').hidden = !(u && u.role === 'admin' && u.pendingCount > 0);
+    if (!$('admin-alert').hidden) $('admin-alert-n').textContent = u.pendingCount;
+    $('who').classList.toggle('dot', !$('admin-alert').hidden);
   });
 
   document.addEventListener('click', function (e) {
@@ -179,7 +217,7 @@
   $('btn-cut').onclick = function () { go('cut'); };
 
   // ---------- views (#cut = หน้าตัดยอด) ----------
-  var VIEWS = ['home', 'cut', 'history', 'notify', 'receive'];
+  var VIEWS = ['home', 'cut', 'history', 'notify', 'receive', 'account'];
   function go(v) {
     var h = v === 'home' ? '' : '#' + v;
     if (location.hash === h || (!location.hash && !h)) show(); else location.hash = h;
@@ -198,7 +236,7 @@
   window.DM = {
     CFG: CFG, say: say, esc: esc, fmtNum: fmtNum, fmtShort: fmtShort, store: store, go: go,
     getUser: function () { return uname; },
-    setLineUser: setLineUser, apiPost: apiPost, idToken: function () { return null; }, summary: null,
+    setLineUser: setLineUser, apiPost: apiPost, showGate: showGate, idToken: function () { return null; }, summary: null,
     reloadHome: function () { return loadData().then(render); }
   };
   setTimeout(show, 0);

@@ -70,6 +70,9 @@
     <div class="state err" id="error" hidden></div>
 
     <div id="content" hidden>
+      <button class="admin-alert" type="button" id="admin-alert" data-go="account" hidden>
+        <span class="dotc"></span><span>มีคนขอใช้งาน <b id="admin-alert-n">0</b> คน · แตะเพื่ออนุมัติ</span>
+      </button>
       <section aria-labelledby="h-alert">
         <div class="sec-h"><h3 id="h-alert">ต้องดูแล</h3><button class="link" type="button" data-soon="หน้าแจ้งเตือน">ทั้งหมด</button></div>
         <div class="tiles">
@@ -291,6 +294,56 @@
   </div>
 </div>
 
+<div class="app" id="view-account" hidden>
+  <header class="bar">
+    <div class="wrap in">
+      <button class="icon-btn" type="button" data-go="home" aria-label="กลับหน้าแรก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="grow"><div class="eyebrow">ผู้ใช้และสิทธิ์</div><h1>บัญชีของฉัน</h1></div>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="nt-card gold nt-status" id="ac-me"></div>
+
+    <section id="ac-admin" hidden>
+      <div class="sec-h"><h3>โหมดผู้ดูแล</h3><button class="link" type="button" id="ac-lock" hidden>ออกจากโหมดผู้ดูแล</button></div>
+
+      <form class="nt-card" id="ac-login" novalidate>
+        <p class="ac-note" id="ac-login-note">ใส่รหัสผู้ดูแลเพื่ออนุมัติผู้ใช้และจัดการสิทธิ์</p>
+        <div class="fld" style="margin-top:8px"><label for="ac-pw">รหัสผู้ดูแล</label><input id="ac-pw" type="password" autocomplete="current-password"></div>
+        <div class="errbox" id="ac-login-err" hidden></div>
+        <button class="cta" type="submit" id="ac-login-btn" style="margin-top:12px">เข้าโหมดผู้ดูแล</button>
+      </form>
+
+      <div id="ac-panel" hidden>
+        <div id="ac-users"></div>
+        <details class="nt-card ac-pwbox">
+          <summary>เปลี่ยนรหัสผู้ดูแล</summary>
+          <form id="ac-pwform" novalidate>
+            <div class="fld"><label for="ac-pw-cur">รหัสปัจจุบัน</label><input id="ac-pw-cur" type="password" autocomplete="current-password"></div>
+            <div class="fld"><label for="ac-pw-new">รหัสใหม่ (อย่างน้อย 6 ตัว)</label><input id="ac-pw-new" type="password" autocomplete="new-password"></div>
+            <div class="fld"><label for="ac-pw-new2">ยืนยันรหัสใหม่</label><input id="ac-pw-new2" type="password" autocomplete="new-password"></div>
+            <div class="errbox" id="ac-pw-err" hidden></div>
+            <button class="cta" type="submit" style="margin-top:12px">บันทึกรหัสใหม่</button>
+          </form>
+        </details>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="gate" id="gate" hidden>
+  <div class="gate-in">
+    <img class="gate-logo" alt="DR.MO CLINIC" src="assets/logo-white.png">
+    <div class="gate-card">
+      <div class="eyebrow">ระบบสต๊อกคลินิก</div>
+      <h2 id="gate-title">กำลังตรวจสอบสิทธิ์</h2>
+      <p id="gate-msg">รอสักครู่…</p>
+      <p class="gate-who" id="gate-who"></p>
+      <div class="gate-acts" id="gate-acts"></div>
+    </div>
+  </div>
+</div>
+
 <nav class="nav" id="nav" aria-label="เมนูหลัก"><div class="in">
   <button type="button" class="on" data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>หน้าแรก</button>
   <button type="button" data-go="cut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><rect x="3" y="4" width="18" height="16" rx="3"/></svg>ตัดยอด</button>
@@ -309,5 +362,6 @@
 <script src="js/line.js"></script>
 <script src="js/notify.js"></script>
 <script src="js/receive.js"></script>
+<script src="js/account.js"></script>
 </body>
 </html>

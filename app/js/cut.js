@@ -19,9 +19,7 @@
   // ---------- data ----------
   function fetchItems() {
     if (demo()) return window.DEMO_DATA ? Promise.resolve(window.DEMO_DATA.items) : Promise.reject(new Error('ยังไม่ได้ใส่ API_URL ใน js/config.js'));
-    return fetch(CFG.API_URL + '?action=items', { redirect: 'follow' })
-      .then(function (r) { if (!r.ok) throw new Error('เซิร์ฟเวอร์ตอบกลับ ' + r.status); return r.json(); })
-      .then(function (j) { if (!j.ok) throw new Error(j.error || 'โหลดรายการไม่สำเร็จ'); return j.data; });
+    return DM.apiPost({ action: 'items' });
   }
   function ensureItems(force) {
     if (loaded && !force) return Promise.resolve();

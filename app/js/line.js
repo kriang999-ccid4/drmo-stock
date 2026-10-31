@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  // เชื่อม LINE (LIFF): เปิดในแอป LINE จะรู้ชื่อและรูปผู้ใช้เอง แล้วลงทะเบียนกับหลังบ้าน
+  // เชื่อม LINE (LIFF): ต้องเข้าสู่ระบบ LINE และได้รับอนุมัติจากผู้ดูแลก่อนจึงใช้งานได้
   var DM = window.DM, CFG = DM.CFG;
   var state = { ready: false, inClient: false, loggedIn: false, profile: null, user: null, error: '' };
   DM.line = state;
@@ -9,25 +9,33 @@
   };
   DM.lineLogin = function () { if (window.liff && state.ready) liff.login({ redirectUri: location.href }); };
 
-  function done() { state.ready = true; document.dispatchEvent(new CustomEvent('dm:line', { detail: state })); }
+  function auth(ok, code, message) {
+    state.ready = true;
+    document.dispatchEvent(new CustomEvent('dm:line', { detail: state }));
+    document.dispatchEvent(new CustomEvent('dm:auth', { detail: { ok: ok, code: code, message: message } }));
+  }
 
-  if (!CFG.LIFF_ID || !window.liff) { state.error = CFG.LIFF_ID ? 'โหลด LINE SDK ไม่สำเร็จ' : ''; done(); return; }
+  if (!CFG.API_URL) { auth(true); return; }                       // โหมดตัวอย่าง
+  if (!CFG.LIFF_ID) { auth(false, 'error', 'ยังไม่ได้ตั้งค่า LIFF_ID ใน js/config.js'); return; }
+  if (!window.liff) { auth(false, 'error', 'โหลด LINE SDK ไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองใหม่'); return; }
 
   liff.init({ liffId: CFG.LIFF_ID }).then(function () {
     state.inClient = liff.isInClient();
     state.loggedIn = liff.isLoggedIn();
-    if (!state.loggedIn) { done(); return; }   // เปิดในเบราว์เซอร์ทั่วไป: ใช้ชื่อที่ตั้งเองไปก่อน
+    if (!state.loggedIn) { state.ready = true; auth(false, 'login'); return; }
+    if (!liff.getIDToken()) { auth(false, 'error', 'LINE ไม่ส่งข้อมูลยืนยันตัวตน ตรวจว่า LIFF เปิดสิทธิ์ openid แล้ว'); return; }
     return liff.getProfile().then(function (p) {
       state.profile = p;
       DM.setLineUser(p.displayName, p.pictureUrl);
-      if (!CFG.API_URL) return;
-      return DM.apiPost({ action: 'register' }).then(function (u) {
-        state.user = u;
-        if (u.displayName && u.displayName !== p.displayName) DM.setLineUser(u.displayName, p.pictureUrl);
-      }).catch(function (err) { state.error = err.message; });
-    }).then(done);
+      return DM.apiPost({ action: 'register' });
+    }).then(function (u) {
+      state.user = u;
+      if (u.status !== 'active') { auth(false, u.status); return; }
+      if (u.displayName && state.profile && u.displayName !== state.profile.displayName) DM.setLineUser(u.displayName, state.profile.pictureUrl);
+      auth(true);
+    });
   }).catch(function (err) {
-    state.error = 'เชื่อม LINE ไม่สำเร็จ: ' + (err && err.message || err);
-    done();
+    state.error = (err && err.message) || String(err);
+    auth(false, err && err.code ? err.code : 'error', state.error);
   });
 })();

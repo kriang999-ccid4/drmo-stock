@@ -9,9 +9,7 @@
   function demo() { return !CFG.API_URL; }
   function fetchHistory() {
     if (demo()) return Promise.resolve(((window.DEMO_DATA && window.DEMO_DATA.history) || []).slice(0, 30));
-    return fetch(CFG.API_URL + '?action=history&limit=30', { redirect: 'follow' })
-      .then(function (r) { if (!r.ok) throw new Error('เซิร์ฟเวอร์ตอบกลับ ' + r.status); return r.json(); })
-      .then(function (j) { if (!j.ok) throw new Error(j.error || 'โหลดประวัติไม่สำเร็จ'); return j.data; });
+    return DM.apiPost({ action: 'history', limit: 30 });
   }
 
   function dayLabel(iso) {

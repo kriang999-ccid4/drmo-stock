@@ -54,7 +54,7 @@
       el.innerHTML = '<b>' + esc(s.profile ? s.profile.displayName : '') + '</b><span class="neg">ลงทะเบียนกับหลังบ้านไม่สำเร็จ: ' + esc(s.error || 'ไม่ทราบสาเหตุ') + '</span>';
     } else {
       el.innerHTML = (s.profile && s.profile.pictureUrl ? '<img src="' + esc(s.profile.pictureUrl) + '" alt="">' : '') +
-        '<div><b>' + esc(s.user.displayName) + '</b><span>เชื่อมต่อ LINE แล้ว · สิทธิ์ ' + esc(s.user.role || 'staff') + '</span></div>';
+        '<div><b>' + esc(s.user.displayName) + '</b><span>เชื่อมต่อ LINE แล้ว · ' + (s.user.role === 'admin' ? 'ผู้ดูแล' : 'พนักงาน') + '</span></div>';
     }
     act.hidden = !canUse;
     if (canUse) {

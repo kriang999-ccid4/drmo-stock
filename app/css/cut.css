@@ -153,3 +153,49 @@
 .hcard .tag.in{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
 .hcard .tag.out{background:var(--surface);color:var(--fg-2);border:1px solid var(--line)}
 .hcard .ln .q.in{color:var(--ok)}
+
+/* ประตูตรวจสิทธิ์ */
+.gate{position:fixed;inset:0;z-index:30;overflow:auto;color:var(--hdr-fg);
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 2px,rgba(255,255,255,0) 2px 7px,rgba(0,0,0,.08) 7px 9px,rgba(255,255,255,0) 9px 12px),
+    radial-gradient(120% 70% at 30% 0%,rgba(239,219,201,.28),rgba(239,219,201,0) 60%),linear-gradient(160deg,var(--hdr-a),var(--hdr-b) 55%,var(--hdr-c));
+  padding:calc(40px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.gate-in{max-width:400px;margin:0 auto;display:grid;gap:28px;justify-items:center}
+.gate-logo{height:64px;width:auto;filter:drop-shadow(0 2px 8px var(--tint))}
+.gate-card{width:100%;border-radius:22px;padding:22px;color:var(--fg);border:1px solid transparent;
+  background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--gold-grad) border-box;box-shadow:0 0 28px -6px var(--gold-glow),var(--shadow);text-align:center}
+.gate-card h2{margin:4px 0 6px;font-size:21px;font-weight:700;text-wrap:balance}
+.gate-card p{margin:0;color:var(--fg-2);font-size:14px}
+.gate-card .gate-who{margin-top:8px;font-size:12.5px}
+.gate-acts{display:grid;gap:10px;margin-top:18px}
+.gate-acts .ghost{text-decoration:none;text-align:center}
+/* แจ้งผู้ดูแล */
+.admin-alert{margin-top:16px;width:100%;display:flex;align-items:center;gap:10px;text-align:left;border-radius:14px;padding:12px 14px;font-size:14px;
+  border:1px solid transparent;background:linear-gradient(var(--warn-bg),var(--warn-bg)) padding-box,var(--gold-grad) border-box;color:var(--warn)}
+.admin-alert .dotc,.chip-btn.dot::after{width:9px;height:9px;border-radius:50%;background:var(--crit);flex:none}
+.chip-btn.dot{position:relative}
+.chip-btn.dot::after{content:"";position:absolute;top:-2px;right:-2px;box-shadow:0 0 0 2px var(--hdr-b)}
+/* บัญชี / ผู้ดูแล */
+.ac-note{margin:0;font-size:13px;color:var(--fg-2)}
+.role{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle}
+.role.admin{color:#3A2A1A;background:linear-gradient(135deg,#F1E0B5,#C9A35E 55%,#E9D3A0)}
+.role.staff{background:var(--surface-2);color:var(--fg-2)}
+.ac-group{margin-top:14px}
+.ac-group h4{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--fg-2)}
+.ac-user{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:8px}
+.ac-user.pending{border-color:transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--gold-grad) border-box}
+.ac-user .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ac-user b{font-size:15px;min-width:0;overflow-wrap:anywhere}
+.ac-user .when{font-size:12px;color:var(--fg-2);white-space:nowrap}
+.ac-user .ops{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ac-user .ops button{border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface-2);color:var(--fg)}
+.ac-user .ops button.go{color:var(--on-brand);border-color:transparent;background:linear-gradient(135deg,var(--brand),var(--brand-2)) padding-box,var(--gold-grad) border-box}
+.ac-user .ops button.bad{color:var(--crit)}
+.ac-user .ops button.armed{background:var(--crit-bg);border-color:var(--crit);color:var(--crit)}
+.ac-user .rn{display:flex;gap:8px;margin-top:10px}
+.ac-user .rn input{flex:1;min-width:0;font:inherit;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.ac-user.me{opacity:.85}
+.ac-pwbox{margin-top:16px}
+.ac-pwbox summary{cursor:pointer;font-weight:600}
+.nt-status b .role{display:inline-block;font-size:11.5px;color:inherit}
+.nt-status b .role.staff{color:var(--fg-2)}
+.nt-status b .role.admin{color:#3A2A1A}
