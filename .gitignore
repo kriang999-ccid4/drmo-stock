@@ -1,0 +1,13 @@
+# ข้อมูลคลินิก ห้ามขึ้น GitHub
+*.xlsx
+*.xls
+*.csv
+data/
+*.jpg
+*.jpeg
+ปิดท้าย/
+โลโก้/
+สี CI/
+mockup/
+# ยกเว้นโลโก้ที่แอปใช้
+!app/assets/*.png
