@@ -13,6 +13,17 @@
   function parseISO(s) { var p = String(s).split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
   function fmtShort(s) { var d = parseISO(s); return d.getDate() + ' ' + TH_M[d.getMonth()] + ' ' + String(d.getFullYear() + 543).slice(2); }
   function fmtNum(n) { return Number(n).toLocaleString('th-TH', { maximumFractionDigits: 1 }); }
+  // แสดงยอดแบบหน่วยบรรจุ เช่น "3 ขวด + 133 u (1,033 u)" (ข้อความล้วน ยังไม่ escape)
+  function fmtStock(it, q) {
+    if (q === undefined) q = it.qty;
+    if (q === null || q === undefined) return 'ไม่ทราบยอด';
+    var u = it.unit ? ' ' + it.unit : '';
+    if (it.packSize && it.packUnit && q >= it.packSize) {
+      var full = Math.floor(q / it.packSize + 1e-9), rem = Math.round((q - full * it.packSize) * 1000) / 1000;
+      return full + ' ' + it.packUnit + (rem ? ' + ' + fmtNum(rem) + u : '') + ' (' + fmtNum(q) + u + ')';
+    }
+    return fmtNum(q) + u;
+  }
   function rel(d) {
     if (d < 0) return 'เลยมา ' + (Math.round(-d / 30) || 1) + ' เดือน';
     if (d === 0) return 'หมดวันนี้';
@@ -152,13 +163,13 @@
     if (rows.length > 5) html += '<button class="more" type="button" id="more">' + (showAll ? 'ย่อรายการ' : 'ดูอีก ' + (rows.length - 5) + ' รายการ') + '</button>';
     $('exp-list').innerHTML = html;
     var m = $('more'); if (m) m.onclick = function () { showAll = !showAll; renderList(); };
-    document.querySelectorAll('.seg button').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.tab === cur)); });
+    document.querySelectorAll('#view-home .seg button').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.tab === cur)); });
   }
   function setTab(t, scroll) {
     cur = t; showAll = false; renderList();
     if (scroll) $('h-exp').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   }
-  document.querySelectorAll('.seg button').forEach(function (b) { b.onclick = function () { setTab(b.dataset.tab); }; });
+  document.querySelectorAll('#view-home .seg button').forEach(function (b) { b.onclick = function () { setTab(b.dataset.tab); }; });
   document.querySelectorAll('.tile[data-tab]').forEach(function (b) { b.onclick = function () { setTab(b.dataset.tab, true); }; });
 
   function render(d) {
@@ -181,7 +192,7 @@
     $('cut-pill-t').textContent = done ? 'ตัดแล้ว' : 'ยังไม่ได้ตัด';
 
     $('cats').innerHTML = d.categories.map(function (c) {
-      return '<button class="cat" type="button" data-soon="หมวด ' + esc(c.name) + '"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+      return '<button class="cat" type="button" data-stock="cat" data-cat="' + esc(c.name) + '"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
         (ICONS[c.name] || DEFAULT_ICON) + '</svg></span><span class="t">' + esc(c.name) + '</span><span class="c"><span>' + c.count + ' รายการ</span>' + (c.out ? '<span class="z">หมด ' + c.out + '</span>' : '') + '</span></button>';
     }).join('');
     $('source-note').innerHTML = d.demo
@@ -203,8 +214,9 @@
   document.addEventListener('dm:auth', function (e) {
     var a = e.detail || {};
     if (!a.ok) { showGate(a.code || 'error', a.message); return; }
-    hideGate(); boot(); show();
     var u = DM.line && DM.line.user;
+    document.body.classList.toggle('viewer', !!(u && u.role === 'viewer'));
+    hideGate(); boot(); show();
     $('admin-alert').hidden = !(u && u.role === 'admin' && u.pendingCount > 0);
     if (!$('admin-alert').hidden) $('admin-alert-n').textContent = u.pendingCount;
     $('who').classList.toggle('dot', !$('admin-alert').hidden);
@@ -215,9 +227,13 @@
     var g = e.target.closest('[data-go]'); if (g) go(g.dataset.go);
   });
   $('btn-cut').onclick = function () { go('cut'); };
+  $('friend-alert').onclick = function () { if (DM.addFriend) DM.addFriend(); };
+  document.addEventListener('dm:friend', function (e) { $('friend-alert').hidden = e.detail !== false; });
 
   // ---------- views (#cut = หน้าตัดยอด) ----------
-  var VIEWS = ['home', 'cut', 'history', 'notify', 'receive', 'account'];
+  var VIEWS = ['home', 'cut', 'history', 'notify', 'receive', 'account', 'count', 'stock'];
+  var EDIT_VIEWS = ['cut', 'receive', 'count'];
+  function isViewer() { return document.body.classList.contains('viewer'); }
   function go(v) {
     var h = v === 'home' ? '' : '#' + v;
     if (location.hash === h || (!location.hash && !h)) show(); else location.hash = h;
@@ -225,6 +241,7 @@
   function show() {
     var v = (location.hash || '').replace('#', '');
     if (VIEWS.indexOf(v) < 0) v = 'home';
+    if (isViewer() && EDIT_VIEWS.indexOf(v) >= 0) { v = 'home'; say('บัญชีนี้ดูได้อย่างเดียว'); }
     VIEWS.forEach(function (n) { $('view-' + n).hidden = n !== v; });
     $('nav').hidden = v !== 'home';
     document.querySelectorAll('#nav [data-go]').forEach(function (b) { b.classList.toggle('on', b.dataset.go === v); });
@@ -234,9 +251,9 @@
   window.addEventListener('hashchange', show);
 
   window.DM = {
-    CFG: CFG, say: say, esc: esc, fmtNum: fmtNum, fmtShort: fmtShort, store: store, go: go,
+    CFG: CFG, say: say, esc: esc, fmtNum: fmtNum, fmtStock: fmtStock, fmtShort: fmtShort, rel: rel, store: store, go: go,
     getUser: function () { return uname; },
-    setLineUser: setLineUser, apiPost: apiPost, showGate: showGate, idToken: function () { return null; }, summary: null,
+    setLineUser: setLineUser, isViewer: isViewer, apiPost: apiPost, showGate: showGate, idToken: function () { return null; }, summary: null,
     reloadHome: function () { return loadData().then(render); }
   };
   setTimeout(show, 0);

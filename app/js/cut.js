@@ -11,6 +11,7 @@
   var cat = '__all';      // '__all' | '__cart' | category name
   var q = '';
   var lastBatch = null;   // { batchId, results, demo }
+  var mode = 'OUT';       // 'OUT' เบิกใช้ตามใบ OPD | 'WASTE' ตัดทิ้ง/สูญเสีย
 
   function isoDay(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function yesterday() { var d = new Date(); d.setDate(d.getDate() - 1); return isoDay(d); }
@@ -66,7 +67,7 @@
   function remainText(it, take) {
     if (it.qty === null || it.qty === undefined) return 'ยังไม่ทราบยอดคงเหลือ';
     var unit = it.unit ? ' ' + esc(it.unit) : '';
-    if (!take) return 'เหลือ ' + fmtNum(it.qty) + unit;
+    if (!take) return 'เหลือ ' + esc(DM.fmtStock(it));
     var after = Math.round((it.qty - take) * 1000) / 1000;
     return 'เหลือ ' + fmtNum(it.qty) + ' → <span class="' + (after < 0 ? 'neg' : '') + '">' + fmtNum(after) + '</span>' + unit;
   }
@@ -152,13 +153,26 @@
   };
 
   // ---------- review & save ----------
-  function lines() { return Object.keys(cart).map(function (id) { return { itemId: id, qty: cart[id] }; }); }
+  function lines() {
+    var note = mode === 'WASTE' ? $('cut-reason').value.trim() : '';
+    return Object.keys(cart).map(function (id) { return { itemId: id, qty: cart[id], note: note }; });
+  }
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll('#cut-mode button').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.m === m)); });
+    $('cut-reason-f').hidden = m !== 'WASTE';
+    $('cut-date-l').textContent = m === 'WASTE' ? 'วันที่ตัดทิ้ง' : 'วันที่ในใบ OPD';
+    $('btn-review').firstChild.nodeValue = m === 'WASTE' ? 'ตรวจสอบตัดทิ้ง ' : 'ตรวจสอบ ';
+  }
+  $('cut-mode').addEventListener('click', function (e) { var b = e.target.closest('button[data-m]'); if (b) setMode(b.dataset.m); });
   function fmtDateLong(s) { return DM.fmtShort(s); }
 
   function openReview() {
     var date = $('cut-date').value;
     var neg = 0;
-    $('rv-lead').textContent = 'ใบ OPD วันที่ ' + fmtDateLong(date) + ' · ผู้ตัดยอด ' + DM.getUser() + ' · ' + cartCount() + ' รายการ';
+    $('rv-lead').textContent = (mode === 'WASTE' ? 'ตัดทิ้ง/สูญเสีย วันที่ ' : 'ใบ OPD วันที่ ') + fmtDateLong(date) + ' · โดย ' + DM.getUser() + ' · ' + cartCount() + ' รายการ' +
+      (mode === 'WASTE' && $('cut-reason').value.trim() ? ' · สาเหตุ: ' + $('cut-reason').value.trim() : '');
+    $('rv-title').textContent = mode === 'WASTE' ? 'ตรวจสอบก่อนตัดทิ้ง' : 'ตรวจสอบก่อนบันทึก';
     $('rv-list').innerHTML = lines().map(function (ln) {
       var it = byId[ln.itemId], ba = '';
       if (it.qty !== null && it.qty !== undefined) {
@@ -191,7 +205,7 @@
       return { itemId: it.id, name: it.name, unit: it.unit, qty: ln.qty, before: before, after: after };
     });
     var batchId = 'DEMO-' + Date.now();
-    D.history.unshift({ batchId: batchId, type: 'OUT', date: body.date, by: body.by, createdAt: new Date().toISOString(),
+    D.history.unshift({ batchId: batchId, type: body.type || 'OUT', date: body.date, by: body.by, createdAt: new Date().toISOString(),
       lines: results.map(function (r) { return { itemId: r.itemId, name: r.name, unit: r.unit, qty: r.qty }; }) });
     demoLastCut(); recountDemo();
     return { batchId: batchId, date: body.date, by: body.by, results: results };
@@ -199,7 +213,7 @@
   function undoDemo(batchId) {
     var D = window.DEMO_DATA, h = D.history || [], i = h.findIndex(function (b) { return b.batchId === batchId; });
     if (i < 0) throw new Error('ไม่พบการตัดยอดชุดนี้ อาจถูกยกเลิกไปแล้ว');
-    var sign = h[i].type === 'IN' ? -1 : 1;
+    var sign = h[i].type === 'IN' || h[i].type === 'ADJUST' ? -1 : 1;
     h[i].lines.forEach(function (ln) {
       var it = D.items.find(function (x) { return x.id === ln.itemId; });
       if (it && it.qty !== null && it.qty !== undefined) it.qty = Math.round((it.qty + sign * ln.qty) * 1000) / 1000;
@@ -209,7 +223,7 @@
   }
   function demoLastCut() {
     var D = window.DEMO_DATA, last = D._origLastCut || null;
-    (D.history || []).forEach(function (b) { if (b.type !== 'IN' && (!last || b.date >= last.date)) last = { date: b.date, by: b.by }; });
+    (D.history || []).forEach(function (b) { if (b.type === 'OUT' && (!last || b.date >= last.date)) last = { date: b.date, by: b.by }; });
     D.lastCut = last;
   }
   function recountDemo() {
@@ -222,10 +236,11 @@
   function save() {
     var btn = $('rv-save');
     btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
-    var body = { action: 'cut', date: $('cut-date').value, by: DM.getUser(), lines: lines() };
+    var body = { action: 'cut', type: mode, date: $('cut-date').value, by: DM.getUser(), lines: lines() };
     var p = demo() ? Promise.resolve(applyDemo(body)) : post(body);
     p.then(function (res) {
-      lastBatch = { batchId: res.batchId, results: res.results, demo: demo(), date: res.date };
+      lastBatch = { batchId: res.batchId, results: res.results, demo: demo(), date: res.date, type: mode };
+      if (mode === 'WASTE') { $('cut-reason').value = ''; setMode('OUT'); }
       clearDraft(); closeReview(); showDone(res);
       ensureItems(true); DM.reloadHome();
     }).catch(function (err) {
@@ -237,8 +252,8 @@
 
   function showDone(res) {
     $('cut-main').hidden = true; $('cut-done').hidden = false; $('cartbar').hidden = true;
-    $('done-title').textContent = 'ตัดยอดเรียบร้อย ' + res.results.length + ' รายการ';
-    $('done-sub').textContent = 'ใบ OPD วันที่ ' + fmtDateLong(res.date) + ' · โดย ' + res.by;
+    $('done-title').textContent = (lastBatch.type === 'WASTE' ? 'ตัดทิ้งเรียบร้อย ' : 'ตัดยอดเรียบร้อย ') + res.results.length + ' รายการ';
+    $('done-sub').textContent = (lastBatch.type === 'WASTE' ? 'วันที่ ' : 'ใบ OPD วันที่ ') + fmtDateLong(res.date) + ' · โดย ' + res.by;
     $('done-demo').hidden = !lastBatch.demo;
     $('done-list').innerHTML = res.results.map(function (r) {
       var after = r.after === null || r.after === undefined ? 'ไม่ทราบยอด' : 'เหลือ ' + fmtNum(r.after) + ' ' + esc(r.unit || '');

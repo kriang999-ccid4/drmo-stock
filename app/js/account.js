@@ -33,7 +33,7 @@
     if (!CFG.API_URL) { $('ac-me').innerHTML = '<div><b>โหมดตัวอย่าง</b><span>ต่อหลังบ้านและเปิดผ่าน LINE เพื่อใช้หน้านี้</span></div>'; return; }
     if (!u) { $('ac-me').innerHTML = '<div><b>ยังไม่ได้เข้าสู่ระบบ</b></div>'; return; }
     $('ac-me').innerHTML = (p && p.pictureUrl ? '<img src="' + esc(p.pictureUrl) + '" alt="">' : '') +
-      '<div><b>' + esc(u.displayName) + '<span class="role ' + (u.role === 'admin' ? 'admin">ผู้ดูแล' : 'staff">พนักงาน') + '</span></b>' +
+      '<div><b>' + esc(u.displayName) + '<span class="role ' + (ROLE[u.role] ? u.role : 'staff') + '">' + (ROLE[u.role] || ROLE.staff) + '</span></b>' +
       '<span>บัญชี LINE: ' + esc(p ? p.displayName : '') + '</span></div>';
   }
 
@@ -84,16 +84,19 @@
     var d = new Date(iso); if (!iso || isNaN(d)) return '';
     return 'ขอเมื่อ ' + d.getDate() + '/' + (d.getMonth() + 1) + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   }
+  var ROLE = { admin: 'ผู้ดูแล', staff: 'พนักงาน', viewer: 'ดูอย่างเดียว' };
   function userCard(u) {
-    var me = DM.line.user && u.userId === DM.line.user.userId, ops = '';
-    if (u.status === 'pending') ops = '<button class="go" data-op="approve">อนุมัติ</button><button class="bad" data-op="disable" data-confirm="1">ไม่อนุมัติ</button>';
-    else if (u.status === 'active' && !me) ops = (u.role === 'admin' ? '<button data-op="staff">ลดเป็นพนักงาน</button>' : '<button data-op="admin" data-confirm="1">ตั้งเป็นผู้ดูแล</button>') +
+    var me = DM.line.user && u.userId === DM.line.user.userId, ops = '', role = ROLE[u.role] ? u.role : 'staff';
+    if (u.status === 'pending') ops = '<button class="go" data-op="approve" data-as="staff">อนุมัติ (พนักงาน)</button><button class="go" data-op="approve" data-as="viewer">อนุมัติ (ดูอย่างเดียว)</button>' +
+      '<button class="bad" data-op="disable" data-confirm="1">ไม่อนุมัติ</button>';
+    else if (u.status === 'active' && !me) ops = (role === 'admin' ? '<button data-op="staff">ลดเป็นพนักงาน</button>' : '<button data-op="admin" data-confirm="1">ตั้งเป็นผู้ดูแล</button>') +
+      (role === 'viewer' ? '<button data-op="staff">ให้แก้ยอดได้ (พนักงาน)</button>' : '<button data-op="viewer">เปลี่ยนเป็นดูอย่างเดียว</button>') +
       '<button data-op="rename">เปลี่ยนชื่อที่แสดง</button><button class="bad" data-op="disable" data-confirm="1">ปิดใช้งาน</button>';
     else if (u.status === 'active') ops = '<button data-op="rename">เปลี่ยนชื่อที่แสดง</button>';
     else ops = '<button class="go" data-op="approve">เปิดใช้งานอีกครั้ง</button>';
     var rn = renaming === u.userId ? '<form class="rn"><input maxlength="40" value="' + esc(u.displayName) + '" aria-label="ชื่อที่แสดง"><button class="go" type="submit">บันทึก</button></form>' : '';
     return '<div class="ac-user ' + u.status + (me ? ' me' : '') + '" data-id="' + esc(u.userId) + '"><div class="top"><b>' + esc(u.displayName || '(ไม่มีชื่อ)') +
-      (u.status === 'active' ? '<span class="role ' + (u.role === 'admin' ? 'admin">ผู้ดูแล' : 'staff">พนักงาน') + '</span>' : '') + (me ? ' <span class="when">(คุณ)</span>' : '') +
+      (u.status === 'active' ? '<span class="role ' + role + '">' + ROLE[role] + '</span>' : '') + (me ? ' <span class="when">(คุณ)</span>' : '') +
       '</b><span class="when">' + esc(u.status === 'pending' ? when(u.requestedAt) : '') + '</span></div><div class="ops">' + ops + '</div>' + rn + '</div>';
   }
   function renderUsers() {
@@ -109,7 +112,7 @@
     $('who').classList.toggle('dot', g.pending.length > 0);
   }
 
-  var LABEL = { approve: 'อนุมัติแล้ว', disable: 'ปิดใช้งานแล้ว', admin: 'ตั้งเป็นผู้ดูแลแล้ว', staff: 'ลดเป็นพนักงานแล้ว', rename: 'เปลี่ยนชื่อแล้ว' };
+  var LABEL = { approve: 'อนุมัติแล้ว', disable: 'ปิดใช้งานแล้ว', admin: 'ตั้งเป็นผู้ดูแลแล้ว', staff: 'ตั้งเป็นพนักงานแล้ว', viewer: 'ตั้งเป็นดูอย่างเดียวแล้ว', rename: 'เปลี่ยนชื่อแล้ว' };
   function setUser(id, op, extra) {
     if (busy) return; busy = true;
     adminCall(Object.assign({ action: 'adminSetUser', userId: id, op: op }, extra || {}))
@@ -127,7 +130,7 @@
       return;
     }
     b.disabled = true; b.textContent = 'กำลังบันทึก…';
-    setUser(id, op);
+    setUser(id, op, b.dataset.as ? { asRole: b.dataset.as } : null);
   });
   $('ac-users').addEventListener('submit', function (e) {
     e.preventDefault();

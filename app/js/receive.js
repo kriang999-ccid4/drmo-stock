@@ -42,7 +42,7 @@
       c.order.map(function (k) { return '<button class="chip" type="button" data-cat="' + esc(k) + '" aria-pressed="' + (cat === k) + '">' + esc(k) + '<span class="cnt">' + c.counts[k] + '</span></button>'; }).join('');
   }
   function stockText(it) {
-    return it.qty === null || it.qty === undefined ? 'ยังไม่ทราบยอด' : 'มีอยู่ ' + fmtNum(it.qty) + (it.unit ? ' ' + esc(it.unit) : '');
+    return it.qty === null || it.qty === undefined ? 'ยังไม่ทราบยอด' : 'มีอยู่ ' + esc(DM.fmtStock(it));
   }
   function renderList() {
     var qq = q.trim().toLowerCase();
@@ -62,6 +62,24 @@
 
   function lineName(ln) { return ln.newItem ? ln.newItem.name : (byId[ln.itemId] || {}).name; }
   function lineUnit(ln) { return ln.newItem ? ln.newItem.unit : (byId[ln.itemId] || {}).unit; }
+  function lineQtyText(ln) {
+    var base = '+' + fmtNum(ln.qty) + ' ' + esc(lineUnit(ln) || '');
+    return ln.packQty ? '+' + fmtNum(ln.packQty) + ' ' + esc(ln.packUnit) + ' <span class="sub-q">(' + base + ')</span>' : base;
+  }
+  // หน่วยที่กรอกในฟอร์ม: 'pack' (ขวด/กล่อง) หรือ 'base' (u/cc/amp)
+  var qtyMode = 'base', formPack = null;
+  function setQtyMode(m) {
+    qtyMode = m;
+    document.querySelectorAll('#rc-f-mode button').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.m === m)); });
+    $('rc-f-unit-l').textContent = formPack ? '(' + (m === 'pack' ? formPack.packUnit : formPack.unit || 'หน่วยย่อย') + ')' : $('rc-f-unit-l').textContent;
+    calcHint();
+  }
+  function calcHint() {
+    var h = $('rc-f-calc'), v = Number($('rc-f-qty').value);
+    if (!formPack || qtyMode !== 'pack' || !(v > 0)) { h.hidden = true; return; }
+    h.hidden = false; h.textContent = '= ' + fmtNum(v * formPack.packSize) + ' ' + (formPack.unit || '') + ' (1 ' + formPack.packUnit + ' = ' + fmtNum(formPack.packSize) + ' ' + (formPack.unit || '') + ')';
+  }
+  $('rc-f-mode').addEventListener('click', function (e) { var b = e.target.closest('button[data-m]'); if (b) setQtyMode(b.dataset.m); });
   function lineMeta(ln) {
     var p = [];
     p.push(ln.exp ? 'EXP ' + DM.fmtShort(ln.exp) : '<span class="nox">ไม่มี EXP</span>');
@@ -74,7 +92,7 @@
     $('rc-count').textContent = lines.length + ' รายการ';
     $('rc-lines').innerHTML = lines.map(function (ln, i) {
       return '<div class="rc-line"><div class="name">' + esc(lineName(ln)) + (ln.newItem ? '<span class="newtag">ใหม่</span>' : '') + '</div>' +
-        '<div class="q">+' + fmtNum(ln.qty) + ' ' + esc(lineUnit(ln) || '') + '</div><div class="meta">' + lineMeta(ln) + '</div>' +
+        '<div class="q">' + lineQtyText(ln) + '</div><div class="meta">' + lineMeta(ln) + '</div>' +
         '<div class="ops"><button type="button" data-edit="' + i + '">แก้ไข</button><button type="button" class="del" data-del="' + i + '">ลบ</button></div></div>';
     }).join('');
     $('rc-n').textContent = lines.length;
@@ -98,12 +116,19 @@
       $('rc-f-unit').value = ln ? ln.newItem.unit : '';
     }
     $('rc-f-unit-l').textContent = isNew ? '' : (it.unit ? '(' + it.unit + ')' : '');
-    $('rc-f-qty').value = ln ? ln.qty : '';
+    formPack = !isNew && it.packSize && it.packUnit ? it : null;
+    $('rc-f-mode').hidden = !formPack;
+    if (formPack) {
+      $('rc-f-mode').innerHTML = '<button type="button" data-m="pack">เป็น' + esc(it.packUnit) + '</button><button type="button" data-m="base">เป็น ' + esc(it.unit || 'หน่วยย่อย') + '</button>';
+      setQtyMode(ln ? (ln.packQty ? 'pack' : 'base') : 'pack');
+    } else { qtyMode = 'base'; }
+    $('rc-f-qty').value = ln ? (ln.packQty || ln.qty) : '';
+    if (isNew) { $('rc-f-punit').value = ln && ln.newItem.packUnit || ''; $('rc-f-psize').value = ln && ln.newItem.packSize || ''; }
     $('rc-f-exp').value = ln ? (ln.exp || '') : '';
     $('rc-f-lot').value = ln ? (ln.lotNo || '') : '';
     $('rc-f-note').value = ln ? (ln.note || '') : '';
     $('rc-f-ok').textContent = ln ? 'บันทึกการแก้ไข' : 'เพิ่มในรายการ';
-    $('rc-f-err').hidden = true; checkExp();
+    $('rc-f-err').hidden = true; checkExp(); calcHint();
     $('rc-sheet').hidden = false;
     (isNew ? $('rc-f-name') : $('rc-f-qty')).focus();
   }
@@ -115,7 +140,7 @@
     else w.hidden = true;
   }
   $('rc-f-exp').addEventListener('input', checkExp);
-  $('rc-f-qty').addEventListener('input', function (e) { var v = e.target.value.replace(/[^\d.]/g, ''); if (v !== e.target.value) e.target.value = v; });
+  $('rc-f-qty').addEventListener('input', function (e) { var v = e.target.value.replace(/[^\d.]/g, ''); if (v !== e.target.value) e.target.value = v; calcHint(); });
   $('rc-form').addEventListener('submit', function (e) {
     e.preventDefault();
     var err = $('rc-f-err'), qty = Number($('rc-f-qty').value);
@@ -129,8 +154,14 @@
       var dup = items.find(function (it) { return it.name.toLowerCase() === name.toLowerCase(); });
       if (dup) return fail('มีสินค้าชื่อนี้อยู่แล้วในหมวด ' + dup.category + ' · ให้ค้นหาแล้วกด + รับเข้า แทน', $('rc-f-name'));
       ln.newItem = { name: name, category: c, unit: $('rc-f-unit').value.trim() };
+      var pu = $('rc-f-punit').value.trim(), ps = Number($('rc-f-psize').value);
+      if (pu || ps) {
+        if (!pu || !(ps > 0)) return fail('ขนาดบรรจุต้องใส่ทั้งหน่วยบรรจุและจำนวนต่อหน่วย หรือเว้นว่างทั้งคู่', $('rc-f-punit'));
+        ln.newItem.packUnit = pu; ln.newItem.packSize = ps;
+      }
     } else ln.itemId = old ? old.itemId : editing.itemId;
     if (!(ln.qty > 0)) return fail('ใส่จำนวนที่รับมากกว่า 0', $('rc-f-qty'));
+    if (formPack && qtyMode === 'pack') { ln.packQty = ln.qty; ln.packUnit = formPack.packUnit; ln.qty = Math.round(ln.qty * formPack.packSize * 1000) / 1000; }
     if (old) lines[editing.index] = ln; else lines.push(ln);
     saveDraft(); closeForm(); renderLines();
     DM.say(old ? 'แก้ไขแล้ว' : 'เพิ่ม ' + lineName(ln) + ' ในรายการแล้ว');
@@ -161,7 +192,7 @@
       if (ln.newItem) ba = 'สินค้าใหม่ · ' + esc(ln.newItem.category);
       else if (it.qty === null || it.qty === undefined) ba = 'ยังไม่ทราบยอด · จะเริ่มนับจาก ' + fmtNum(ln.qty);
       else ba = 'คงเหลือ ' + fmtNum(it.qty) + ' → ' + fmtNum(Math.round((it.qty + ln.qty) * 1000) / 1000) + ' ' + esc(it.unit || '');
-      return '<div class="rv"><div class="name">' + esc(lineName(ln)) + '</div><div class="q" style="color:var(--ok)">+' + fmtNum(ln.qty) + ' ' + esc(lineUnit(ln) || '') + '</div><div class="ba">' + ba + ' · ' + lineMeta(ln) + '</div></div>';
+      return '<div class="rv"><div class="name">' + esc(lineName(ln)) + '</div><div class="q" style="color:var(--ok)">' + lineQtyText(ln) + '</div><div class="ba">' + ba + ' · ' + lineMeta(ln) + '</div></div>';
     }).join('');
     var w = $('rc-rv-warn'); w.hidden = !noExp;
     w.textContent = noExp ? noExp + ' รายการไม่มี EXP จะไม่ได้รับแจ้งเตือนวันหมดอายุ' : '';
@@ -178,7 +209,7 @@
       var it;
       if (ln.newItem) {
         maxNum++;
-        it = { id: 'IT' + ('000' + maxNum).slice(-4), name: ln.newItem.name, category: ln.newItem.category, unit: ln.newItem.unit, qty: 0 };
+        it = { id: 'IT' + ('000' + maxNum).slice(-4), name: ln.newItem.name, category: ln.newItem.category, unit: ln.newItem.unit, qty: 0, packUnit: ln.newItem.packUnit || '', packSize: ln.newItem.packSize || null };
         D.items.push(it);
         var c = D.categories.find(function (x) { return x.name === it.category; }); if (c) c.count++;
         D.totals.items++;
@@ -197,7 +228,11 @@
   $('rc-rv-save').onclick = function () {
     var btn = $('rc-rv-save');
     btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
-    var body = { action: 'receive', date: $('rc-date').value, by: DM.getUser(), lines: lines.map(function (ln) { return Object.assign({}, ln); }) };
+    var body = { action: 'receive', date: $('rc-date').value, by: DM.getUser(), lines: lines.map(function (ln) {
+      var x = Object.assign({}, ln);
+      if (ln.packQty) x.note = [ln.packQty + ' ' + ln.packUnit, ln.note].filter(Boolean).join(' · ');
+      delete x.packQty; delete x.packUnit; return x;
+    }) };
     var p = demo() ? Promise.resolve().then(function () { return applyDemo(body); }) : DM.apiPost(body);
     p.then(function (res) {
       lastBatch = { batchId: res.batchId, demo: demo(), lines: lines.slice(), date: res.date };

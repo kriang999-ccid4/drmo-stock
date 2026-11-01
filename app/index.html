@@ -60,16 +60,22 @@
         <span class="pill warn" id="cut-pill"><span class="dot"></span><span id="cut-pill-t">กำลังโหลด</span></span>
       </div>
       <div class="meta"><span id="cut-for"></span><span>ตัดล่าสุด <b id="cut-last">–</b></span><button class="link" type="button" data-go="history">ดูประวัติ</button></div>
-      <button class="cta" id="btn-cut" type="button">
+      <button class="cta edit-only" id="btn-cut" type="button">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         เริ่มตัดยอดประจำวัน
       </button>
+      <p class="view-only vo-note">บัญชีของคุณเป็นสิทธิ์ <b>ดูอย่างเดียว</b> · ดูสต๊อก ประวัติ และรับแจ้งเตือนได้</p>
     </div>
 
     <div id="loading"><section><div class="tiles"><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div></section></div>
     <div class="state err" id="error" hidden></div>
 
     <div id="content" hidden>
+      <button class="friend-alert" type="button" id="friend-alert" hidden>
+        <span class="fic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        <span class="ft"><b>แอดเพื่อน DR.MO Stock</b><span>เพื่อรับแจ้งเตือนของใกล้หมดอายุทาง LINE</span></span>
+        <span class="fbtn">แอดเพื่อน</span>
+      </button>
       <button class="admin-alert" type="button" id="admin-alert" data-go="account" hidden>
         <span class="dotc"></span><span>มีคนขอใช้งาน <b id="admin-alert-n">0</b> คน · แตะเพื่ออนุมัติ</span>
       </button>
@@ -79,7 +85,7 @@
           <button class="tile crit" type="button" data-tab="expired"><span class="n" id="n-expired">0</span><span class="l">เลยวันหมดอายุ แต่ยังมีของ</span><span class="s">ตรวจสอบด่วน</span></button>
           <button class="tile warn" type="button" data-tab="m3"><span class="n" id="n-m3">0</span><span class="l">หมดอายุภายใน 3 เดือน</span><span class="s">ใช้ก่อน</span></button>
           <button class="tile info" type="button" data-tab="m6"><span class="n" id="n-m6">0</span><span class="l">หมดอายุภายใน 6 เดือน</span><span class="s">เฝ้าดู</span></button>
-          <button class="tile out" type="button" data-soon="รายการของหมด"><span class="n" id="n-out">0</span><span class="l">ของหมด</span><span class="s">สร้างรายการสั่งซื้อ</span></button>
+          <button class="tile out" type="button" data-stock="out"><span class="n" id="n-out">0</span><span class="l">ของหมด</span><span class="s">สร้างรายการสั่งซื้อ</span></button>
         </div>
       </section>
 
@@ -94,7 +100,7 @@
       </section>
 
       <section aria-labelledby="h-cat">
-        <div class="sec-h"><h3 id="h-cat">หมวดสินค้า</h3><span class="eyebrow">ตามจุดเก็บ</span></div>
+        <div class="sec-h"><h3 id="h-cat">หมวดสินค้า</h3><button class="link" type="button" data-stock="all">ดูสต๊อกทั้งหมด</button></div>
         <div class="cats" id="cats"></div>
       </section>
 
@@ -113,9 +119,14 @@
   </header>
 
   <div class="wrap" id="cut-main">
+    <div class="seg mode-seg" id="cut-mode" role="tablist" aria-label="ประเภทการตัดยอด">
+      <button type="button" data-m="OUT" aria-selected="true">เบิกใช้ตามใบ OPD</button>
+      <button type="button" data-m="WASTE" aria-selected="false">ตัดทิ้ง / สูญเสีย</button>
+    </div>
     <div class="cut-meta gold">
-      <div class="f"><label for="cut-date">วันที่ในใบ OPD</label><input type="date" id="cut-date"></div>
+      <div class="f"><label for="cut-date" id="cut-date-l">วันที่ในใบ OPD</label><input type="date" id="cut-date"></div>
       <div class="f who"><span class="k">ผู้ตัดยอด</span><b id="cut-by">Nee</b></div>
+      <div class="fld reason" id="cut-reason-f" hidden><label for="cut-reason">สาเหตุ</label><input id="cut-reason" maxlength="100" autocomplete="off" placeholder="เช่น หมดอายุ, ขวดแตก, เหลือในขวดที่เปิด"></div>
     </div>
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -173,6 +184,45 @@
   </div>
 </div>
 
+<div class="app" id="view-stock" hidden>
+  <header class="bar">
+    <div class="wrap in">
+      <button class="icon-btn" type="button" data-go="home" aria-label="กลับหน้าแรก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="grow"><div class="eyebrow">ยอดคงเหลือตามจุดเก็บ</div><h1>สต๊อก</h1></div>
+      <button class="icon-btn" type="button" id="st-reload" aria-label="โหลดยอดใหม่"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="seg st-seg" id="st-filter" role="tablist" aria-label="กรองสินค้า">
+      <button type="button" data-f="all" aria-selected="true">ทั้งหมด <span class="n" id="st-n-all"></span></button>
+      <button type="button" data-f="out" aria-selected="false">ของหมด <span class="n" id="st-n-out"></span></button>
+      <button type="button" data-f="exp" aria-selected="false">ใกล้หมดอายุ <span class="n" id="st-n-exp"></span></button>
+    </div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <label class="sr" for="st-q">ค้นหาสินค้า</label>
+      <input id="st-q" type="search" placeholder="ค้นหาชื่อสินค้า" autocomplete="off">
+    </div>
+    <div class="chips" id="st-cats" aria-label="กรองตามหมวด"></div>
+    <div class="st-order" id="st-order" hidden>
+      <div><b id="st-order-t">รายการสั่งซื้อ</b><span>ส่งให้คุณหมอทาง LINE หรือคัดลอกไปวาง</span></div>
+      <div class="st-order-b"><button class="ghost" type="button" id="st-copy">คัดลอก</button><button class="cta line" type="button" id="st-share">ส่งทาง LINE</button></div>
+    </div>
+    <div class="list st-list" id="st-list"><div class="empty">กำลังโหลดยอดคงเหลือ</div></div>
+  </div>
+
+  <div class="scrim" id="st-sheet" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sd-name">
+      <div class="sd-top"><div><div class="eyebrow" id="sd-cat"></div><h2 id="sd-name"></h2></div><button class="icon-btn" type="button" id="sd-close" aria-label="ปิด"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="sd-qty gold" id="sd-qty"></div>
+      <h4 class="sd-h">ล็อตและวันหมดอายุ</h4>
+      <div class="list" id="sd-lots"></div>
+      <h4 class="sd-h">ความเคลื่อนไหวล่าสุด</h4>
+      <div class="list" id="sd-tx"></div>
+    </div>
+  </div>
+</div>
+
 <div class="app" id="view-notify" hidden>
   <header class="bar">
     <div class="wrap in">
@@ -183,6 +233,12 @@
   <div class="wrap">
     <div class="nt-card gold nt-status" id="nt-status"><b>กำลังเชื่อม LINE…</b></div>
 
+    <div class="nt-card nt-friend" id="nt-friend" hidden>
+      <b>ยังไม่ได้แอดเพื่อน LINE OA “DR.MO Stock”</b>
+      <span>ต้องแอดเพื่อนก่อน จึงจะเปิดรับแจ้งเตือนได้ · แอดแล้วกลับมาที่หน้านี้</span>
+      <button class="cta" type="button" id="nt-add">แอดเพื่อน DR.MO Stock</button>
+    </div>
+
     <div id="nt-actions" hidden>
       <div class="nt-card">
         <label class="nt-row" for="nt-sub">
@@ -191,7 +247,7 @@
         </label>
       </div>
       <button class="cta" type="button" id="nt-test">ส่งข้อความทดสอบตอนนี้</button>
-      <p class="nt-hint">ต้องแอด LINE OA ของระบบเป็นเพื่อนก่อน จึงจะได้รับข้อความ</p>
+      <p class="nt-hint">ต้องแอด LINE OA “DR.MO Stock” (<span id="nt-oa">@133edzka</span>) เป็นเพื่อนก่อน จึงจะได้รับข้อความ</p>
     </div>
 
     <section aria-labelledby="h-preview">
@@ -259,11 +315,16 @@
         <div class="fld"><label for="rc-f-name">ชื่อสินค้า</label><input id="rc-f-name" maxlength="100" autocomplete="off" placeholder="เช่น Profhilo 2 ml"></div>
         <div class="fld2">
           <div class="fld"><label for="rc-f-cat">หมวด / จุดเก็บ</label><select id="rc-f-cat"></select></div>
-          <div class="fld"><label for="rc-f-unit">หน่วย</label><input id="rc-f-unit" maxlength="20" autocomplete="off" placeholder="เช่น ขวด, u, cc"></div>
+          <div class="fld"><label for="rc-f-unit">หน่วยที่ใช้เบิก</label><input id="rc-f-unit" maxlength="20" autocomplete="off" placeholder="เช่น u, cc, amp"></div>
+        </div>
+        <div class="fld2">
+          <div class="fld"><label for="rc-f-punit">หน่วยบรรจุ <span class="opt">ไม่บังคับ</span></label><input id="rc-f-punit" maxlength="20" autocomplete="off" placeholder="เช่น ขวด, กล่อง"></div>
+          <div class="fld"><label for="rc-f-psize">1 หน่วยบรรจุ = ?</label><input id="rc-f-psize" inputmode="decimal" autocomplete="off" placeholder="เช่น 300"></div>
         </div>
       </div>
+      <div class="seg mode-seg" id="rc-f-mode" hidden></div>
       <div class="fld2">
-        <div class="fld"><label for="rc-f-qty">จำนวนที่รับ <span id="rc-f-unit-l"></span></label><input id="rc-f-qty" inputmode="decimal" autocomplete="off" placeholder="0"></div>
+        <div class="fld"><label for="rc-f-qty">จำนวนที่รับ <span id="rc-f-unit-l"></span></label><input id="rc-f-qty" inputmode="decimal" autocomplete="off" placeholder="0"><span class="calc" id="rc-f-calc" hidden></span></div>
         <div class="fld"><label for="rc-f-exp">วันหมดอายุ (EXP)</label><input id="rc-f-exp" type="date"></div>
       </div>
       <div class="fld2">
@@ -331,6 +392,62 @@
   </div>
 </div>
 
+<div class="app" id="view-count" hidden>
+  <header class="bar">
+    <div class="wrap in">
+      <button class="icon-btn" type="button" data-go="home" aria-label="กลับหน้าแรก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="grow"><div class="eyebrow">เทียบของจริงกับระบบ</div><h1>นับสต๊อก</h1></div>
+      <button class="icon-btn" type="button" data-go="history" aria-label="ประวัติ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg></button>
+    </div>
+  </header>
+  <div class="wrap" id="ct-main">
+    <div class="cut-meta gold">
+      <div class="f"><label for="ct-date">วันที่นับ</label><input type="date" id="ct-date"></div>
+      <div class="f who"><span class="k">ผู้นับ</span><b id="ct-by">Nee</b></div>
+    </div>
+    <p class="hist-note">เลือกหมวดตามจุดเก็บ แล้วกรอกเฉพาะรายการที่นับ · สินค้าที่มีขนาดบรรจุ ให้กรอก "ยังไม่เปิด" กับ "เปิดแล้วเหลือ" แยกกัน</p>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <label class="sr" for="ct-q">ค้นหาสินค้า</label>
+      <input id="ct-q" type="search" placeholder="ค้นหาชื่อสินค้า" autocomplete="off">
+    </div>
+    <div class="chips" id="ct-cats" aria-label="กรองตามหมวด"></div>
+    <div class="list" id="ct-list"><div class="empty">กำลังโหลดรายการสินค้า</div></div>
+  </div>
+
+  <div class="wrap done" id="ct-done" hidden>
+    <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></div>
+    <h2 id="ct-done-title">บันทึกการนับเรียบร้อย</h2>
+    <p id="ct-done-sub"></p>
+    <span class="demo-tag" id="ct-done-demo" hidden>โหมดตัวอย่าง · ยังไม่ได้บันทึกลงชีต</span>
+    <div class="list" id="ct-done-list"></div>
+    <div class="acts">
+      <button class="cta" type="button" id="ct-again">นับหมวดอื่นต่อ</button>
+      <button class="ghost" type="button" id="ct-undo">ยกเลิกการนับชุดนี้</button>
+      <button class="link" type="button" data-go="home">กลับหน้าแรก</button>
+    </div>
+  </div>
+
+  <div class="cartbar" id="ct-bar" hidden><div class="in">
+    <button class="ghost" type="button" id="ct-clear">ล้าง</button>
+    <button class="cta" type="button" id="ct-review">ตรวจสอบ <span id="ct-n">0</span> รายการ</button>
+  </div></div>
+
+  <div class="scrim" id="ct-review-s" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ct-rv-title">
+      <h2 id="ct-rv-title">ตรวจสอบก่อนปรับยอด</h2>
+      <p class="lead" id="ct-rv-lead"></p>
+      <div id="ct-rv-list"></div>
+      <div class="warnbox" id="ct-rv-warn" hidden></div>
+      <div class="errbox" id="ct-rv-err" hidden></div>
+      <div class="acts">
+        <button class="ghost" type="button" id="ct-rv-back">แก้ไข</button>
+        <button class="cta" type="button" id="ct-rv-save">บันทึกและปรับยอด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="gate" id="gate" hidden>
   <div class="gate-in">
     <img class="gate-logo" alt="DR.MO CLINIC" src="assets/logo-white.png">
@@ -346,9 +463,10 @@
 
 <nav class="nav" id="nav" aria-label="เมนูหลัก"><div class="in">
   <button type="button" class="on" data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>หน้าแรก</button>
-  <button type="button" data-go="cut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><rect x="3" y="4" width="18" height="16" rx="3"/></svg>ตัดยอด</button>
-  <button type="button" data-go="receive" aria-label="รับของเข้า"><span class="fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>รับเข้า</button>
-  <button type="button" data-soon="รายการสต๊อก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>สต๊อก</button>
+  <button type="button" class="edit-only" data-go="cut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><rect x="3" y="4" width="18" height="16" rx="3"/></svg>ตัดยอด</button>
+  <button type="button" class="edit-only" data-go="receive" aria-label="รับของเข้า"><span class="fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>รับเข้า</button>
+  <button type="button" class="edit-only" data-go="count"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>นับสต๊อก</button>
+  <button type="button" class="view-only" data-go="stock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>สต๊อก</button>
   <button type="button" data-go="notify"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>แจ้งเตือน</button>
 </div></nav>
 <div class="toast" id="toast" role="status" hidden></div>
@@ -363,5 +481,7 @@
 <script src="js/notify.js"></script>
 <script src="js/receive.js"></script>
 <script src="js/account.js"></script>
+<script src="js/count.js"></script>
+<script src="js/stock.js"></script>
 </body>
 </html>

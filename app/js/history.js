@@ -29,14 +29,17 @@
     }
     var html = '', lastDay = '';
     list.forEach(function (b) {
-      var isIn = b.type === 'IN';
+      var isIn = b.type === 'IN', T = { IN: ['in', 'รับเข้า'], OUT: ['out', 'ตัดยอด'], WASTE: ['waste', 'ตัดทิ้ง'], ADJUST: ['adj', 'นับสต๊อก'] }[b.type] || ['out', b.type];
       if (b.date !== lastDay) { html += '<div class="hday">' + esc(dayLabel(b.date, isIn)) + '</div>'; lastDay = b.date; }
       html += '<article class="hcard" data-batch="' + esc(b.batchId) + '">' +
-        '<div class="hh"><div><b><span class="tag ' + (isIn ? 'in">รับเข้า' : 'out">ตัดยอด') + '</span>' + b.lines.length + ' รายการ · โดย ' + esc(b.by) + '</b><span>' + esc(savedAt(b.createdAt)) + '</span></div></div>' +
+        '<div class="hh"><div><b><span class="tag ' + T[0] + '">' + T[1] + '</span>' + b.lines.length + ' รายการ · โดย ' + esc(b.by) + '</b><span>' + esc(savedAt(b.createdAt)) + '</span></div></div>' +
         b.lines.map(function (ln) {
-          return '<div class="ln"><span class="n">' + esc(ln.name) + '</span><span class="q' + (isIn ? ' in">+' : '">−') + fmtNum(ln.qty) + ' ' + esc(ln.unit || '') + '</span></div>';
+          var q;
+          if (b.type === 'ADJUST') q = ln.qty === 0 ? '<span class="q">ตรง</span>' : '<span class="q' + (ln.qty > 0 ? ' in">+' : ' neg">−') + fmtNum(Math.abs(ln.qty)) + ' ' + esc(ln.unit || '') + '</span>';
+          else q = '<span class="q' + (isIn ? ' in">+' : '">−') + fmtNum(ln.qty) + ' ' + esc(ln.unit || '') + '</span>';
+          return '<div class="ln"><span class="n">' + esc(ln.name) + '</span>' + q + '</div>';
         }).join('') +
-        '<div class="hf"><button class="ghost hundo" type="button">ยกเลิกชุดนี้</button></div></article>';
+        '<div class="hf edit-only"><button class="ghost hundo" type="button">ยกเลิกชุดนี้</button></div></article>';
     });
     $('hist-list').innerHTML = html;
   }

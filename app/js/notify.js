@@ -54,9 +54,14 @@
       el.innerHTML = '<b>' + esc(s.profile ? s.profile.displayName : '') + '</b><span class="neg">ลงทะเบียนกับหลังบ้านไม่สำเร็จ: ' + esc(s.error || 'ไม่ทราบสาเหตุ') + '</span>';
     } else {
       el.innerHTML = (s.profile && s.profile.pictureUrl ? '<img src="' + esc(s.profile.pictureUrl) + '" alt="">' : '') +
-        '<div><b>' + esc(s.user.displayName) + '</b><span>เชื่อมต่อ LINE แล้ว · ' + (s.user.role === 'admin' ? 'ผู้ดูแล' : 'พนักงาน') + '</span></div>';
+        '<div><b>' + esc(s.user.displayName) + '</b><span>เชื่อมต่อ LINE แล้ว · ' + ({ admin: 'ผู้ดูแล', viewer: 'ดูอย่างเดียว' }[s.user.role] || 'พนักงาน') + '</span></div>';
     }
+    var noFriend = canUse && s.friend === false;
+    $('nt-friend').hidden = !noFriend;
     act.hidden = !canUse;
+    act.classList.toggle('locked', noFriend);
+    $('nt-sub').disabled = noFriend; $('nt-test').disabled = noFriend;
+    if (CFG.OA_ID) $('nt-oa').textContent = CFG.OA_ID;
     if (canUse) {
       $('nt-sub').checked = !!s.user.subscribed;
       $('nt-time').textContent = s.user.notifyTime || '08:30';
@@ -86,7 +91,9 @@
     }).then(function () { busy = false; b.disabled = false; b.textContent = 'ส่งข้อความทดสอบตอนนี้'; });
   });
 
+  $('nt-add').addEventListener('click', function () { DM.addFriend(); });
   document.addEventListener('dm:line', renderStatus);
+  document.addEventListener('dm:friend', renderStatus);
   document.addEventListener('dm:summary', renderPreview);
   document.addEventListener('dm:view', function (e) { if (e.detail === 'notify') { renderStatus(); renderPreview(); } });
 })();
