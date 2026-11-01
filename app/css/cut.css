@@ -279,3 +279,6 @@ body.viewer .nav .in{grid-template-columns:repeat(3,1fr)}
 .qty.tx.pos b{color:var(--ok)}
 .qty.tx.neg b{color:var(--crit)}
 body.noscroll{overflow:hidden}
+/* ปุ่มสต๊อกในเมนูล่าง: แสดงเฉพาะสิทธิ์ดูอย่างเดียว (พนักงานเข้าจากหน้าแรก) */
+.nav .in > button.view-only{display:none}
+body.viewer .nav .in > button.view-only{display:grid}
