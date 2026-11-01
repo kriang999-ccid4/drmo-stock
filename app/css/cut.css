@@ -90,7 +90,7 @@
 .hcard .hh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--surface-2)}
 .hcard .hh b{display:block;font-size:14.5px}
 .hcard .hh span{font-size:12.5px;color:var(--fg-2)}
-.hcard .ln{display:flex;justify-content:space-between;gap:12px;padding:9px 14px;border-top:1px solid var(--line);font-size:14px}
+.hcard .ln{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 12px;padding:9px 14px;border-top:1px solid var(--line);font-size:14px}
 .hcard .ln:first-of-type{border-top:0}
 .hcard .ln .n{min-width:0;overflow-wrap:anywhere}
 .hcard .ln .q{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -282,3 +282,35 @@ body.noscroll{overflow:hidden}
 /* ปุ่มสต๊อกในเมนูล่าง: แสดงเฉพาะสิทธิ์ดูอย่างเดียว (พนักงานเข้าจากหน้าแรก) */
 .nav .in > button.view-only{display:none}
 body.viewer .nav .in > button.view-only{display:grid}
+
+/* รหัส OPD ตอนตัดยอด */
+.crow .link.popd{font-size:12px;margin-top:3px;padding:2px 0;display:none}
+.crow.on .link.popd{display:inline-block}
+.opd-tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--warn-bg);color:var(--warn);margin-left:2px}
+.crow .padd.first{border:1px dashed var(--gold-2,#C9A35E);background:var(--surface);color:var(--brand);font:inherit;font-size:13px;font-weight:700;border-radius:10px;padding:8px 12px;white-space:nowrap}
+.ptot{text-align:right}
+.ptot b{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+.ptot span{font-size:11.5px;color:var(--fg-2)}
+.pts{grid-column:1 / -1;display:grid;gap:6px;padding:4px 0 2px}
+.pt{display:grid;grid-template-columns:auto 1fr 70px auto 34px;gap:6px;align-items:center}
+.pt .pk{font-size:11px;font-weight:700;color:var(--fg-2);letter-spacing:.04em}
+.pt input{min-width:0;font:inherit;font-size:15px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.pt .pref{text-transform:uppercase;font-weight:600;letter-spacing:.03em}
+.pt .pq{text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.pt .u{font-size:12px;color:var(--fg-2);min-width:16px}
+.pt .px{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg-2);font-size:18px;line-height:1}
+.pt.bad .pref{border-color:var(--crit);color:var(--crit)}
+.pts .padd{justify-self:start;border:0;background:none;color:var(--brand);font:inherit;font-size:13px;font-weight:700;padding:4px 0}
+.crow.has-pts{align-items:start}
+.rv-pts{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.rv-pts span,.opd-chip{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--fg-2);border:1px solid var(--line)}
+.hcard .ln .opds{display:flex;flex-wrap:wrap;gap:4px;flex-basis:100%;margin-top:4px}
+/* ค้นหา OPD (หน้าประวัติ) */
+.opd-search{display:flex;gap:8px;margin:14px 0 4px}
+.opd-search input{flex:1;min-width:0;font:inherit;font-size:15px;padding:11px 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-transform:uppercase}
+.opd-search button{flex:none;padding:11px 16px;width:auto}
+#opd-result{margin-top:8px}
+#opd-result .list{margin-top:6px}
+.opd-h{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--fg-2);margin:8px 2px 0}
+.opd-h b{color:var(--fg);font-size:15px}
+.opd-link{cursor:pointer;font:inherit;font-size:11.5px;margin-left:4px;vertical-align:1px}

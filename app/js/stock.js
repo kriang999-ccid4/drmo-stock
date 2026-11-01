@@ -170,7 +170,8 @@
     else amt = (sign > 0 ? '+' : '−') + DM.fmtNum(Math.abs(t.qty));
     var cls = t.type === 'COUNT' || (sign === 0 && t.qty === 0) ? '' : (sign > 0 || (sign === 0 && t.qty > 0) ? 'pos' : 'neg');
     var who = t.by && t.by !== 'นำเข้าจากชีตเดิม' ? esc(t.by) : (t.by ? 'ชีตเดิม' : '');
-    return '<div class="item"><div class="name">' + d[0] + '</div><div class="sub">' + (t.date ? DM.fmtShort(t.date) : '') + (who ? ' · ' + who : '') +
+    return '<div class="item"><div class="name">' + d[0] + (t.patientRef ? ' <button type="button" class="opd-chip opd-link" data-ref="' + esc(t.patientRef) + '">OPD ' + esc(t.patientRef) + '</button>' : '') +
+      '</div><div class="sub">' + (t.date ? DM.fmtShort(t.date) : '') + (who ? ' · ' + who : '') +
       (t.note ? ' · ' + esc(t.note) : '') + '</div><div class="qty tx ' + cls + '"><b>' + amt + '</b><span>' + esc(it.unit || '') + '</span></div></div>';
   }
   function closeItem() { openId = null; $('st-sheet').hidden = true; document.body.classList.remove('noscroll'); }
@@ -182,6 +183,10 @@
   $('st-list').addEventListener('click', function (e) { var r = e.target.closest('.srow'); if (r) openItem(r.dataset.id); });
   $('st-reload').onclick = function () { ensure(true).then(function () { if (loaded) DM.say('อัปเดตยอดแล้ว'); }); };
   $('sd-close').onclick = closeItem;
+  $('sd-tx').addEventListener('click', function (e) {
+    var b = e.target.closest('.opd-link'); if (!b || !DM.searchOpd) return;
+    closeItem(); DM.searchOpd(b.dataset.ref);
+  });
   $('st-sheet').addEventListener('click', function (e) { if (e.target === $('st-sheet')) closeItem(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('st-sheet').hidden) closeItem(); });
   document.addEventListener('dm:stock-changed', function () { loaded = false; });

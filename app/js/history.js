@@ -37,7 +37,8 @@
           var q;
           if (b.type === 'ADJUST') q = ln.qty === 0 ? '<span class="q">ตรง</span>' : '<span class="q' + (ln.qty > 0 ? ' in">+' : ' neg">−') + fmtNum(Math.abs(ln.qty)) + ' ' + esc(ln.unit || '') + '</span>';
           else q = '<span class="q' + (isIn ? ' in">+' : '">−') + fmtNum(ln.qty) + ' ' + esc(ln.unit || '') + '</span>';
-          return '<div class="ln"><span class="n">' + esc(ln.name) + '</span>' + q + '</div>';
+          var op = ln.patients && ln.patients.length ? '<span class="opds">' + ln.patients.map(function (p) { return '<span class="opd-chip">OPD ' + esc(p.ref) + ' · ' + fmtNum(p.qty) + '</span>'; }).join('') + '</span>' : '';
+          return '<div class="ln"><span class="n">' + esc(ln.name) + '</span>' + q + op + '</div>';
         }).join('') +
         '<div class="hf edit-only"><button class="ghost hundo" type="button">ยกเลิกชุดนี้</button></div></article>';
     });
@@ -73,6 +74,33 @@
       DM.say('ยกเลิกไม่สำเร็จ: ' + err.message);
     });
   });
+
+  // ---------- ค้นหาตามรหัส OPD (เฉพาะพนักงาน/ผู้ดูแล) ----------
+  function searchOpd(ref) {
+    ref = String(ref || '').trim().toUpperCase().replace(/\s+/g, '');
+    if (!ref) { $('opd-result').innerHTML = ''; return; }
+    $('opd-result').innerHTML = '<div class="skel"></div>';
+    var p = demo() ? Promise.resolve(demoOpd(ref)) : DM.apiPost({ action: 'opd', ref: ref });
+    p.then(function (d) {
+      if (!d.rows.length) { $('opd-result').innerHTML = '<div class="state">ไม่พบการใช้ของของ OPD ' + esc(d.ref) + '<br><span class="eyebrow">ค้นได้เฉพาะรายการที่ตัดยอดพร้อมใส่รหัส OPD</span></div>'; return; }
+      var html = '<div class="opd-h"><b>OPD ' + esc(d.ref) + '</b><span>' + d.rows.length + ' รายการ</span></div><div class="list">';
+      html += d.rows.map(function (r) {
+        return '<div class="item"><div class="name">' + esc(r.name) + '</div><div class="sub">' + DM.fmtShort(r.date) + (r.by ? ' · ตัดโดย ' + esc(r.by) : '') + '</div>' +
+          '<div class="qty"><b>' + fmtNum(r.qty) + '</b><span>' + esc(r.unit || '') + '</span></div></div>';
+      }).join('');
+      $('opd-result').innerHTML = html + '</div>';
+    }).catch(function (err) { $('opd-result').innerHTML = '<div class="state err">ค้นหาไม่สำเร็จ: ' + esc(err.message) + '</div>'; });
+  }
+  function demoOpd(ref) {
+    var rows = [];
+    ((window.DEMO_DATA && window.DEMO_DATA.history) || []).forEach(function (b) {
+      if (b.type !== 'OUT') return;
+      b.lines.forEach(function (ln) { (ln.patients || []).forEach(function (p) { if (p.ref === ref) rows.push({ date: b.date, name: ln.name, unit: ln.unit, qty: p.qty, by: b.by }); }); });
+    });
+    return { ref: ref, rows: rows };
+  }
+  $('opd-form').addEventListener('submit', function (e) { e.preventDefault(); searchOpd($('opd-q').value); $('opd-q').blur(); });
+  DM.searchOpd = function (ref) { $('opd-q').value = ref; DM.go('history'); setTimeout(function () { searchOpd(ref); }, 0); };
 
   $('hist-reload').onclick = load;
   $('hist-back').onclick = function () { DM.go(cameFrom === 'cut' ? 'cut' : 'home'); };

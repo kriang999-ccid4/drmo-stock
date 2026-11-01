@@ -10,5 +10,7 @@ window.APP_CONFIG = {
   LIFF_URL: 'https://liff.line.me/2012310640-yydk7EyT',
   // LINE OA ที่ส่งแจ้งเตือน (DR.MO Stock) · ต้องแอดเพื่อนก่อนจึงรับข้อความได้
   OA_ID: '@133edzka',
-  OA_ADD_URL: 'https://line.me/R/ti/p/@133edzka'
+  OA_ADD_URL: 'https://line.me/R/ti/p/@133edzka',
+  // หมวดที่ต้องใส่รหัส OPD ตอนตัดยอด (ใช้ในโหมดตัวอย่าง · ระบบจริงอ่านจากชีต Settings: opd_required_categories)
+  OPD_CATEGORIES: ['Filler Botox ไหม']
 };
