@@ -76,6 +76,7 @@
     var sub = [];
     if (it.packSize && it.packUnit && it.qty >= it.packSize) sub.push(esc(DM.fmtStock(it)));
     if (it.nextExp) sub.push('EXP ' + DM.fmtShort(it.nextExp));
+    if (it.minQty !== null && it.minQty !== undefined && it.minQty !== '') sub.push('สั่งเมื่อ ≤ ' + DM.fmtNum(it.minQty));
     if (cat === '__all') sub.push(esc(it.category));
     return '<button type="button" class="srow' + (it.out ? ' is-out' : '') + '" data-id="' + esc(it.id) + '">' +
       '<span class="name">' + esc(it.name) + '</span>' +
@@ -155,6 +156,7 @@
       return '<div class="item"><div class="name">' + (l.exp ? 'EXP ' + DM.fmtShort(l.exp) : 'ไม่ระบุวันหมดอายุ') + '</div><div class="sub">' + expBadge(l.days) +
         (l.lotNo ? 'ล็อต ' + esc(l.lotNo) : 'ไม่มีเลขล็อต') + '</div><div class="qty"><b>' + DM.fmtNum(l.qty) + '</b><span>' + esc(it.unit || '') + '</span></div></div>';
     }).join('') : '<div class="empty">ไม่มีล็อตที่ยังเหลือของ</div>';
+    fillSettings(it);
     $('sd-tx').innerHTML = '<div class="empty">กำลังโหลด…</div>';
     $('st-sheet').hidden = false; document.body.classList.add('noscroll');
     if (demo()) { $('sd-tx').innerHTML = '<div class="empty">โหมดตัวอย่าง ไม่มีประวัติ</div>'; return; }
@@ -174,6 +176,69 @@
       '</div><div class="sub">' + (t.date ? DM.fmtShort(t.date) : '') + (who ? ' · ' + who : '') +
       (t.note ? ' · ' + esc(t.note) : '') + '</div><div class="qty tx ' + cls + '"><b>' + amt + '</b><span>' + esc(it.unit || '') + '</span></div></div>';
   }
+  // ---------- ตั้งค่าสินค้า: จุดสั่งซื้อ / ขนาดบรรจุ ----------
+  function numOrEmpty(v) { v = String(v == null ? '' : v).trim(); return v === '' ? '' : Number(v); }
+  function fillSettings(it) {
+    var u = it.unit || 'หน่วย';
+    $('sd-min').value = it.minQty === null || it.minQty === undefined ? '' : it.minQty;
+    $('sd-min-u').textContent = u; $('sd-ps-u').textContent = u;
+    $('sd-pu').value = it.packUnit || ''; $('sd-ps').value = it.packSize || '';
+    $('sd-pk-badge').hidden = it.packNote !== 'รอยืนยัน';
+    $('sd-err').hidden = true;
+    var s = $('sd-save'); s.disabled = false; s.textContent = it.packNote === 'รอยืนยัน' ? 'บันทึก (ยืนยันขนาดบรรจุ)' : 'บันทึกการตั้งค่า';
+    var use = it.use30 || 0, wk = Math.round(use / 30 * 7 * 10) / 10, sug = Math.ceil(use / 30 * 14);
+    $('sd-use').innerHTML = demo() ? 'โหมดตัวอย่าง: ไม่มีข้อมูลการใช้' : use
+      ? 'ใช้ไป 30 วันล่าสุด ' + DM.fmtNum(use) + ' ' + esc(u) + ' (≈ ' + DM.fmtNum(wk) + ' ต่อสัปดาห์) · ถ้าสั่งแล้วรอของประมาณ 1 สัปดาห์ แนะนำตั้งไว้พอใช้ 2 สัปดาห์ ' +
+        '<button type="button" class="link" id="sd-sug" data-v="' + sug + '">ใช้ค่า ' + DM.fmtNum(sug) + '</button>'
+      : 'ยังไม่มีการตัดยอดใน 30 วันล่าสุด';
+    minEq();
+  }
+  function minEq() {
+    var m = Number($('sd-min').value), ps = Number($('sd-ps').value), pu = $('sd-pu').value.trim();
+    $('sd-min-eq').textContent = m > 0 && ps > 1 && pu ? '≈ ' + DM.fmtNum(Math.round(m / ps * 10) / 10) + ' ' + pu : '';
+  }
+  ['sd-min', 'sd-ps', 'sd-pu'].forEach(function (id) { $(id).addEventListener('input', function (e) {
+    if (id !== 'sd-pu') { var r = e.target.value.replace(/[^\d.]/g, ''); if (r !== e.target.value) e.target.value = r; }
+    minEq();
+  }); });
+  $('sd-use').addEventListener('click', function (e) { var b = e.target.closest('#sd-sug'); if (b) { $('sd-min').value = b.dataset.v; minEq(); $('sd-min').focus(); } });
+  $('sd-save').onclick = function () {
+    var it = byId[openId]; if (!it) return;
+    var body = { action: 'setItem', itemId: it.id }, minV = numOrEmpty($('sd-min').value);
+    var pu = $('sd-pu').value.trim(), ps = numOrEmpty($('sd-ps').value);
+    var curMin = it.minQty === null || it.minQty === undefined ? '' : it.minQty;
+    if (minV !== curMin) body.minQty = minV;
+    if (pu !== (it.packUnit || '') || ps !== (it.packSize || '') || it.packNote === 'รอยืนยัน') { body.packUnit = pu; body.packSize = ps; }
+    if (!('minQty' in body) && !('packUnit' in body)) { DM.say('ไม่มีอะไรเปลี่ยน'); return; }
+    var err = $('sd-err'), btn = $('sd-save');
+    if ((pu && !(ps > 1)) || (!pu && ps !== '')) { err.hidden = false; err.textContent = 'ขนาดบรรจุต้องใส่ทั้งชื่อ (เช่น ขวด) และจำนวนที่มากกว่า 1 หรือเว้นว่างทั้งคู่'; return; }
+    err.hidden = true; btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+    var p = demo() ? Promise.resolve(demoSet(it, body)) : DM.apiPost(body);
+    p.then(function (upd) {
+      Object.assign(it, upd);
+      var first = it.lots.filter(function (l) { return l.days !== null; })[0];
+      it.nextDays = first ? first.days : null; it.nextExp = first ? first.exp : '';
+      render(); openItem(it.id);
+      DM.say('บันทึกการตั้งค่าแล้ว');
+      document.dispatchEvent(new CustomEvent('dm:stock-changed'));
+      loaded = true;   // ข้อมูลหน้านี้อัปเดตแล้ว ไม่ต้องโหลดใหม่
+      if (DM.reloadHome) DM.reloadHome();
+    }).catch(function (e2) {
+      btn.disabled = false; btn.textContent = 'ลองบันทึกอีกครั้ง';
+      err.hidden = false; err.textContent = 'บันทึกไม่สำเร็จ: ' + e2.message;
+    });
+  };
+  function demoSet(it, body) {
+    var o = {};
+    if ('minQty' in body) o.minQty = body.minQty === '' ? null : body.minQty;
+    if ('packUnit' in body) { o.packUnit = body.packUnit; o.packSize = body.packSize === '' ? null : body.packSize; o.packNote = body.packUnit ? 'ยืนยันแล้ว' : ''; }
+    var min = 'minQty' in o ? o.minQty : it.minQty;
+    o.out = it.qty !== null && it.qty !== undefined && it.qty <= (min == null ? 0 : min);
+    var src = (window.DEMO_DATA.items || []).filter(function (x) { return x.id === it.id; })[0];
+    if (src) Object.assign(src, { minQty: min, packUnit: 'packUnit' in o ? o.packUnit : src.packUnit, packSize: 'packSize' in o ? o.packSize : src.packSize });
+    return o;
+  }
+
   function closeItem() { openId = null; $('st-sheet').hidden = true; document.body.classList.remove('noscroll'); }
 
   // ---------- events ----------

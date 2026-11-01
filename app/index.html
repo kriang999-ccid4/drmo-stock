@@ -221,6 +221,22 @@
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sd-name">
       <div class="sd-top"><div><div class="eyebrow" id="sd-cat"></div><h2 id="sd-name"></h2></div><button class="icon-btn" type="button" id="sd-close" aria-label="ปิด"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <div class="sd-qty gold" id="sd-qty"></div>
+      <div class="edit-only" id="sd-set">
+        <h4 class="sd-h">ตั้งค่าสินค้า</h4>
+        <div class="set-card">
+          <div class="set-f">
+            <label for="sd-min"><b>จุดสั่งซื้อ</b><span>เหลือเท่านี้หรือน้อยกว่า จะขึ้นในรายการ "ของหมด" ให้สั่ง</span></label>
+            <div class="set-row"><input id="sd-min" inputmode="decimal" autocomplete="off" placeholder="ยังไม่ตั้ง"><span class="u" id="sd-min-u"></span><span class="eq" id="sd-min-eq"></span></div>
+            <p class="hint" id="sd-use"></p>
+          </div>
+          <div class="set-f">
+            <label for="sd-pu"><b>ขนาดบรรจุ</b> <span class="badge warn" id="sd-pk-badge" hidden>รอยืนยัน</span><span>ถ้ารับเป็นขวด/กล่อง แต่ตัดใช้เป็นหน่วยย่อย · เว้นว่างถ้าไม่ใช่</span></label>
+            <div class="set-row">1 <input id="sd-pu" class="pu" maxlength="20" autocomplete="off" placeholder="ขวด"> = <input id="sd-ps" inputmode="decimal" autocomplete="off" placeholder="300"><span class="u" id="sd-ps-u"></span></div>
+          </div>
+          <div class="errbox" id="sd-err" hidden></div>
+          <button class="cta" type="button" id="sd-save">บันทึกการตั้งค่า</button>
+        </div>
+      </div>
       <h4 class="sd-h">ล็อตและวันหมดอายุ</h4>
       <div class="list" id="sd-lots"></div>
       <h4 class="sd-h">ความเคลื่อนไหวล่าสุด</h4>
