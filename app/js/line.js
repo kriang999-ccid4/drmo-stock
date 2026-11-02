@@ -7,7 +7,16 @@
   DM.idToken = function () {
     try { return state.loggedIn && window.liff ? liff.getIDToken() : null; } catch (e) { return null; }
   };
-  DM.lineLogin = function () { if (window.liff && state.ready) liff.login({ redirectUri: location.href }); };
+  // เข้าสู่ระบบใหม่ · ถ้าค้างบัตรผ่านเก่า (หมดอายุ) อยู่ ต้องออกจากระบบก่อน ไม่งั้น LINE จะไม่ออกบัตรใหม่ให้
+  DM.lineLogin = function () {
+    if (!window.liff || !state.ready) return;
+    try { if (!state.inClient && liff.isLoggedIn()) liff.logout(); } catch (e) {}
+    liff.login({ redirectUri: location.href });
+  };
+  // บัตรผ่าน LINE (ID token) อายุ ~1 ชม. ในแอป LINE ระบบต่ออายุให้เอง แต่ในเบราว์เซอร์คอมไม่ต่อให้
+  function tokenExpired() {
+    try { var d = liff.getDecodedIDToken(); return !d || !d.exp || d.exp * 1000 < Date.now() + 60000; } catch (e) { return false; }
+  }
 
   // เป็นเพื่อนกับ OA แล้วหรือยัง (true/false · null = ตรวจไม่ได้ เช่น ยังไม่ได้ผูก OA กับ LINE Login)
   function checkFriend() {
@@ -40,6 +49,13 @@
     state.inClient = liff.isInClient();
     state.loggedIn = liff.isLoggedIn();
     if (!state.loggedIn) { state.ready = true; auth(false, 'login'); return; }
+    if (!state.inClient && tokenExpired()) {
+      var tries = 0; try { tries = +sessionStorage.getItem('drmo-relogin') || 0; sessionStorage.setItem('drmo-relogin', tries + 1); } catch (e) {}
+      state.ready = true;
+      if (tries < 2) { DM.lineLogin(); return; }                     // เข้าระบบใหม่อัตโนมัติ (กันวนซ้ำไม่เกิน 2 รอบ)
+      auth(false, 'login', 'การเข้าสู่ระบบหมดอายุ กดปุ่มด้านล่างเพื่อเข้าสู่ระบบอีกครั้ง'); return;
+    }
+    try { sessionStorage.removeItem('drmo-relogin'); } catch (e) {}
     if (!liff.getIDToken()) { auth(false, 'error', 'LINE ไม่ส่งข้อมูลยืนยันตัวตน ตรวจว่า LIFF เปิดสิทธิ์ openid แล้ว'); return; }
     return liff.getProfile().then(function (p) {
       state.profile = p;
