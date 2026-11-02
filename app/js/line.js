@@ -18,6 +18,18 @@
     try { var d = liff.getDecodedIDToken(); return !d || !d.exp || d.exp * 1000 < Date.now() + 60000; } catch (e) { return false; }
   }
 
+  // หลังเข้าสู่ระบบในเบราว์เซอร์ LINE จะต่อท้ายลิงก์ด้วยรหัสใช้ครั้งเดียว (?code=…&state=…) → ลบออกให้เหลือลิงก์สั้น
+  function cleanUrl() {
+    if (state.inClient || !location.search || !window.history || !history.replaceState) return;
+    try {
+      var u = new URL(location.href), drop = ['code', 'state', 'liffClientId', 'liffRedirectUri', 'error', 'error_description'], changed = false;
+      Array.from(u.searchParams.keys()).forEach(function (k) {
+        if (drop.indexOf(k) >= 0 || k.indexOf('liff.') === 0) { u.searchParams.delete(k); changed = true; }
+      });
+      if (changed) history.replaceState(history.state, '', u.pathname + (u.searchParams.toString() ? '?' + u.searchParams : '') + u.hash);
+    } catch (e) {}
+  }
+
   // เป็นเพื่อนกับ OA แล้วหรือยัง (true/false · null = ตรวจไม่ได้ เช่น ยังไม่ได้ผูก OA กับ LINE Login)
   function checkFriend() {
     if (!window.liff || !state.loggedIn || !liff.getFriendship) return Promise.resolve();
@@ -47,6 +59,7 @@
 
   liff.init({ liffId: CFG.LIFF_ID }).then(function () {
     state.inClient = liff.isInClient();
+    cleanUrl();
     state.loggedIn = liff.isLoggedIn();
     if (!state.loggedIn) { state.ready = true; auth(false, 'login'); return; }
     if (!state.inClient && tokenExpired()) {
