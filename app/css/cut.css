@@ -330,3 +330,62 @@ body.viewer .nav .in > button.view-only{display:grid}
 .set-row .eq{font-size:12.5px;color:var(--fg-2)}
 .set-f .hint{margin:0;font-size:12.5px;color:var(--fg-2);line-height:1.6}
 .set-f .hint .link{font-size:12.5px}
+
+/* ---------- ขนาดตัวอักษร: ขยายทั้งหน้าแบบเดียวกัน (ปุ่ม/ช่องกรอกโตตามด้วย) ---------- */
+body{zoom:calc(var(--fs,1) * var(--dz,1))}
+:root[data-fs="l"]{--fs:1.12}
+:root[data-fs="xl"]{--fs:1.24}
+.fs-row{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 4px 2px;color:var(--hdr-fg)}
+.fs-row b{font-size:13px;white-space:nowrap}
+.fs-btns{display:flex;gap:6px}
+.fs{width:46px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:var(--hdr-fg);font-weight:700;line-height:1;padding:0}
+.fs[data-fs="m"]{font-size:14px}.fs[data-fs="l"]{font-size:18px}.fs[data-fs="xl"]{font-size:22px}
+.fs[aria-pressed="true"]{border-color:transparent;background:linear-gradient(var(--hdr-c),var(--hdr-c)) padding-box,var(--gold-grad) border-box;box-shadow:0 0 14px -4px var(--gold-glow)}
+.nav .in > .desk-only{display:none}
+
+/* ---------- จอกว้าง (คอม/แท็บเล็ตแนวนอน): เมนูด้านซ้าย เนื้อหากว้าง รายการ 2 คอลัมน์ ---------- */
+@media (min-width:1000px){
+  :root{--dz:1.1;--side:228px}
+  body{padding-left:var(--side)}
+  .app{max-width:980px;padding-bottom:48px}
+  .wrap{padding-left:28px;padding-right:28px}
+  .hero{padding-block:24px 70px;border-radius:0 0 26px 26px}
+  .bar{border-radius:0 0 18px 18px}
+  .hero::after,.bar::after{left:24px;right:24px}
+
+  #nav,#nav[hidden]{display:block!important}
+  .nav{top:0;right:auto;width:var(--side);border-top:0;border-right:1px solid var(--line);padding:0}
+  .nav::before{left:auto;right:-1px;top:0;bottom:0;width:1px;height:auto}
+  .nav .in{max-width:none;display:flex!important;flex-direction:column;align-items:stretch;gap:4px;padding:20px 14px}
+  .nav .in > .desk-only{display:flex}
+  .nav-brand{display:flex;align-items:center;gap:10px;padding:2px 8px 18px;margin-bottom:6px;border-bottom:1px solid var(--line);font-size:17px;color:var(--fg)}
+  .nav-brand img{width:38px;height:38px;object-fit:contain}
+  .nav .in > button,body.viewer .nav .in > button.view-only{display:flex;align-items:center;justify-content:flex-start;gap:12px;padding:11px 14px;border-radius:12px;font-size:15px;text-align:left}
+  .nav .in > button.view-only{display:flex}           /* เมนูสต๊อกแสดงทุกสิทธิ์บนคอม */
+  .nav .in > button:hover{background:var(--surface-2);color:var(--fg)}
+  .nav .in > button.on{background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--gold-grad) border-box;border:1px solid transparent;box-shadow:0 0 14px -6px var(--gold-glow)}
+  .nav .fab{width:22px;height:22px;margin:0;border:0;border-radius:0;background:none;box-shadow:none;color:inherit}
+  .nav .fab svg{width:22px;height:22px}
+
+  .cartbar{left:var(--side)}
+  .cartbar .in{max-width:924px}
+  .toast{left:calc(50% + var(--side) / 2);bottom:36px}
+
+  .scrim{align-items:center;padding:24px}
+  .sheet{max-width:620px;max-height:86vh;border-radius:22px}
+  .sheet::before{border-radius:22px 22px 0 0}
+
+  .tiles{grid-template-columns:repeat(4,1fr)}
+  .cats{grid-template-columns:repeat(4,1fr)}
+  .daily{grid-template-columns:1fr minmax(260px,340px);align-items:center}
+  .daily > .row{grid-column:1}.daily > .meta{grid-column:1}
+  .daily > .cta,.daily > .vo-note{grid-column:2;grid-row:1 / span 2}
+
+  /* รายการสินค้า 2 คอลัมน์ */
+  #cut-list,#rc-list,#st-list,#ct-list{display:grid;grid-template-columns:1fr 1fr}
+  #cut-list > *,#rc-list > *,#st-list > *,#ct-list > *{border-top:1px solid var(--line)}
+  #cut-list > :nth-child(-n+2),#rc-list > :nth-child(-n+2),#st-list > :nth-child(-n+2),#ct-list > :nth-child(-n+2){border-top:0}
+  #cut-list > :nth-child(even),#rc-list > :nth-child(even),#st-list > :nth-child(even),#ct-list > :nth-child(even){border-left:1px solid var(--line)}
+  #cut-list > .empty,#cut-list > .errbox,#cut-list > .list-foot,#rc-list > .empty,#rc-list > .errbox,#rc-list > .list-foot,
+  #st-list > .empty,#st-list > .errbox,#st-list > .list-foot,#ct-list > .empty,#ct-list > .errbox,#ct-list > .list-foot{grid-column:1 / -1;border-left:0}
+}

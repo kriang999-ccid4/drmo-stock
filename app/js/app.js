@@ -90,6 +90,18 @@
     b.onclick = function () { applySkin(b.dataset.skin); store.set(KEY_SKIN, b.dataset.skin); say('เปลี่ยนเป็นธีม ' + b.querySelector('b').textContent); };
   });
 
+  // ---------- ขนาดตัวอักษร (จำไว้ในเครื่องนี้) ----------
+  var KEY_FS = 'drmo-stock-fs', FS_NAME = { m: 'ปกติ', l: 'ใหญ่', xl: 'ใหญ่มาก' };
+  function applyFs(f) {
+    if (!FS_NAME[f]) f = 'm';
+    document.documentElement.dataset.fs = f;
+    document.querySelectorAll('.fs').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.fs === f)); });
+  }
+  applyFs(document.documentElement.dataset.fs || 'm');
+  document.querySelectorAll('.fs').forEach(function (b) {
+    b.onclick = function () { applyFs(b.dataset.fs); store.set(KEY_FS, b.dataset.fs); say('ตัวอักษรขนาด' + FS_NAME[b.dataset.fs]); };
+  });
+
   // ---------- data ----------
   function loadData() {
     if (!CFG.API_URL) {
